@@ -24,6 +24,7 @@ namespace Console {
 	float m_BlinkTimer;
 	float BlinkInterval = 0.8f;
 	float BlinkEmptyTime = 0.3f;
+	bool m_ScriptConsole = true;
 
 	bool IsConsoleOpen() {
 		return m_Open;
@@ -36,7 +37,7 @@ namespace Console {
 	void Init(AngelScript::asIScriptEngine* engine, AngelScript::asIScriptContext* ctx) {
 		m_Engine = engine;
 		m_Ctx = ctx;
-		m_Module = engine->GetModule("Console", asEGMFlags::asGM_CREATE_IF_NOT_EXISTS);
+		m_Module = engine->GetModule("main.as"); //engine->GetModule("Console", asEGMFlags::asGM_CREATE_IF_NOT_EXISTS);
 		m_Font.loadFromFile("assets/jackinput.ttf");
 		m_Engine->RegisterGlobalFunction("bool IsConsoleOpen()", asFUNCTION(IsConsoleOpen), asCALL_CDECL);
 		m_Engine->RegisterGlobalFunction("void ConsolePrint(const string str)", asFUNCTION(ConsolePrint), asCALL_CDECL);
@@ -47,6 +48,11 @@ namespace Console {
 
 	void RegisterKeyEvent(const sf::Event& e) {
 		if (e.type == sf::Event::EventType::KeyPressed && ( e.key.code == sf::Keyboard::Tilde || e.key.code == sf::Keyboard::BackSlash ) ) {
+			if (e.key.shift) {
+				m_ScriptConsole = false;
+			} else {
+				m_ScriptConsole = true;
+			}
 			Toggle();
 			return;
 		}
@@ -69,11 +75,20 @@ namespace Console {
 			if (e.key.code == sf::Keyboard::Enter) {
 				if (!m_Buffer.empty()) {
 					//execute
-					int r = AngelScript::ExecuteString(m_Engine, m_Buffer.c_str(), m_Module, m_Ctx);
-					if (r < 0) {
-						m_Log.push_back("Error executing: " + m_Buffer);
+					if (m_ScriptConsole) {
+						int r = AngelScript::ExecuteString(m_Engine, m_Buffer.c_str(), m_Module, m_Ctx);
+						if (r < 0) {
+							m_Log.push_back("Error executing: " + m_Buffer);
+						} else {
+							m_Log.push_back(m_Buffer);
+						}
 					} else {
-						m_Log.push_back(m_Buffer);
+						asIScriptFunction* func = m_Engine->GetModule("main.as")->GetFunctionByName("command");
+						if (func) {
+							int r = m_Ctx->Prepare(func);
+							r = m_Ctx->SetArgObject(0, &m_Buffer);
+							r = m_Ctx->Execute();
+						}
 					}
 					m_History.push_back(m_Buffer);
 					m_Buffer.clear();
@@ -85,18 +100,21 @@ namespace Console {
 					m_HiddenBuffer = m_Buffer;
 				}
 				m_Selection = std::min((int)m_History.size() - 1, ++m_Selection);
-				if(!m_History.empty())
+				if (!m_History.empty()) {
 					m_Buffer = m_History[m_History.size() - m_Selection - 1];
+				}
+				m_Cursor = m_Buffer.size();
 			}
 			if (e.key.code == sf::Keyboard::Down) {
 				m_Selection = std::max(-1, --m_Selection);
 				if (m_Selection == -1) {
 					m_Buffer = m_HiddenBuffer;
 				} else {
-					if (!m_History.empty())
+					if (!m_History.empty()) {
 						m_Buffer = m_History[m_History.size() - m_Selection - 1];
+					}
 				}
-				
+				m_Cursor = m_Buffer.size();
 			}
 			if (e.key.code == sf::Keyboard::Right) {
 				m_Cursor++;

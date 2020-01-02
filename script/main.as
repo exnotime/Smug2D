@@ -19,6 +19,12 @@ void init(){
     SetVsync(true);
 }
 
+void command(const string c){
+    if(c == "nice"){
+        SetVsync(false);
+    }
+}
+
 bool reload(){
     m_Sprite.tint.r = 255;
     m_Sprite.tint.g = 255;

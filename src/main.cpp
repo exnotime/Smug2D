@@ -23,6 +23,8 @@ void MessageCallback(const AngelScript::asSMessageInfo *msg, void *param) {
 		type = "WARN";
 	else if (msg->type == AngelScript::asMSGTYPE_INFORMATION)
 		type = "INFO";
+		
+	Console::ConsolePrint(msg->message);
 	printf("%s (%d, %d) : %s : %s\n", msg->section, msg->row, msg->col, type, msg->message);
 }
 
@@ -56,7 +58,6 @@ bool LoadScript(asIScriptEngine* engine, asIScriptContext* ctx, bool reload) {
 		r = ctx->Execute();
 		return ctx->GetReturnByte() > 0;
 	}
-
 	return true;
 }
 
@@ -100,7 +101,6 @@ int main(int argc, char** argv) {
 		if (!paused) {
 			r = m_asContext->Prepare(m_UpdateFunc);
 			r = m_asContext->SetArgFloat(0, deltaTime);
-			clock.restart();
 			r = m_asContext->Execute();
 			//call render
 			r = m_asContext->Prepare(m_RenderFunc);
@@ -129,8 +129,7 @@ int main(int argc, char** argv) {
 					paused = !paused;
 					if (paused) {
 						window.setTitle("AngelGame(Paused)");
-					}
-					else {
+					} else {
 						window.setTitle("AngelGame(Running)");
 					}
 				}
