@@ -46,7 +46,7 @@ namespace Console {
 	}
 
 	void RegisterKeyEvent(const sf::Event& e) {
-		if (e.type == sf::Event::EventType::KeyPressed && e.key.code == sf::Keyboard::Tilde) {
+		if (e.type == sf::Event::EventType::KeyPressed && ( e.key.code == sf::Keyboard::Tilde || e.key.code == sf::Keyboard::BackSlash ) ) {
 			Toggle();
 			return;
 		}
