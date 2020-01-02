@@ -5,6 +5,9 @@
 #include "AngelScript/scriptstdstring/scriptstdstring.h"
 #include "AngelScript/scriptarray/scriptarray.h"
 #include "AngelScript/serializer/serializer.h"
+#include "AngelScript/scriptfile/scriptfile.h"
+#include "AngelScript/scriptfile/scriptfilesystem.h"
+#include "AngelScript/scriptgrid/scriptgrid.h"
 #include "if_render.h"
 #include "if_math.h"
 #include "if_input.h"
@@ -70,6 +73,9 @@ int main(int argc, char** argv) {
 	RegisterScriptArray(m_asEngine, true);
 	RegisterStdString(m_asEngine);
 	RegisterStdStringUtils(m_asEngine);
+	RegisterScriptFile(m_asEngine);
+	RegisterScriptFileSystem(m_asEngine);
+	RegisterScriptGrid(m_asEngine);
 	m_asEngine->RegisterGlobalFunction("void print(const string &in)", AngelScript::asFUNCTION(Print), AngelScript::asCALL_CDECL);
 	if_math::LoadMathInterface(m_asEngine);
 	if_render::LoadRenderInterface(m_asEngine);
