@@ -24,6 +24,8 @@ void init(){
 void command(const string c){
     if(c == "nice"){
         SetVsync(false);
+    } else if ( c == "reload_level" ) {
+        reloadLevelGrid();
     }
 }
 

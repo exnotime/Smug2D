@@ -4,12 +4,15 @@ Texture@ m_TileErrorTex;
 Texture@ m_TileEmptyTex;
 Texture@ m_TileFilledTex;
 
-void levelInit() {
-    @m_TileErrorTex = LoadTexture("assets/textures/tile_error.png");
-    @m_TileEmptyTex = LoadTexture("assets/textures/tile_empty.png");
-    @m_TileFilledTex = LoadTexture("assets/textures/tile_filled.png");
-    
-    // Create level grid from file.
+void resetLevelGrid() {
+    for ( uint y = 0; y < m_LevelGrid.height(); ++y ) {
+        for ( uint x = 0; x < m_LevelGrid.width(); ++x ) {
+            m_LevelGrid[x,y] = -1;
+        }
+    }
+}
+
+void loadLevelGrid() {
     file levelFile;
     if ( levelFile.open("assets/levels/level_0.txt","r") >= 0 ) {
         uint rowIndex = 0;
@@ -30,6 +33,17 @@ void levelInit() {
     }
 }
 
+void reloadLevelGrid() {
+    resetLevelGrid();
+    loadLevelGrid();
+}
+
+void levelInit() {
+    @m_TileErrorTex = LoadTexture("assets/textures/tile_error.png");
+    @m_TileEmptyTex = LoadTexture("assets/textures/tile_empty.png");
+    @m_TileFilledTex = LoadTexture("assets/textures/tile_filled.png");
+    loadLevelGrid();
+}
 
 void levelRender() {
     // Draw level-grid
