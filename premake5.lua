@@ -34,7 +34,7 @@ solution "Smug2D"
 		kind "ConsoleApp"
 		files { "src/**"}
         includedirs { "include", "src" }
-        flags {"staticruntime"} 
+        staticruntime "On" 
         configuration { "Debug" }
                 links { "angelscript64d", "sfml-main-d", "sfml-system-d", "sfml-graphics-d", "sfml-window-d"}
         configuration { "Release" }

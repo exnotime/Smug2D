@@ -50,6 +50,7 @@ bool reload(){
     m_Sprite.tint.r = 255;
     m_Sprite.tint.g = 255;
     m_Sprite.tint.b = 255;
+    reloadLevelGrid();
     return true;
 }
 float fps;

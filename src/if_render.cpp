@@ -4,6 +4,7 @@
 #include <vector>
 #include "sprite.h"
 #include "if_math.h"
+#include "TextureManager.h"
 
 using namespace AngelScript;
 sf::RenderWindow* g_Window = nullptr;
@@ -16,12 +17,11 @@ void ClearWindow(int r, int g, int b) {
 }
 
 sf::Texture* LoadTexture(const std::string& filename) {
-	sf::Texture* tex = new sf::Texture();
-	tex->loadFromFile(filename);
-	return tex;
+	return TextureManager::GetInstance().LoadTexture(filename);
 }
 
 void UnloadTexture(sf::Texture* tex) {
+	//TODO: Update to use the texture manager
 	if (tex) {
 		delete tex;
 	}

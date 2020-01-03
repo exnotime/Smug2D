@@ -12,6 +12,8 @@
 #include "if_math.h"
 #include "if_input.h"
 #include "Console.h"
+#include "TextureManager.h"
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
 using namespace AngelScript;
@@ -129,6 +131,7 @@ int main(int argc, char** argv) {
 						paused = true;
 						window.setTitle("AngelGame(Paused)");
 					}
+					TextureManager::GetInstance().Reload();
 				}
 				if (event.key.code == sf::Keyboard::F1) {
 					paused = !paused;
@@ -137,6 +140,7 @@ int main(int argc, char** argv) {
 					} else {
 						window.setTitle("AngelGame(Running)");
 					}
+					
 				}
 			}
 		}
