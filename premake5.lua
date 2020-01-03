@@ -33,9 +33,20 @@ solution "Smug2D"
 		language "C++"
 		kind "ConsoleApp"
 		files { "src/Core/**"}
-        includedirs { "include", "src" }
+        includedirs { "include", "src/Core" }
         staticruntime "On" 
+        links { "Box2D" }
         configuration { "Debug" }
                 links { "angelscript64d", "sfml-main-d", "sfml-system-d", "sfml-graphics-d", "sfml-window-d"}
         configuration { "Release" }
                 links { "angelscript64", "sfml-main", "sfml-system", "sfml-graphics", "sfml-window" }
+
+    project "Box2D"
+        targetname "Box2D"
+        debugdir ""
+        location ( location_path )
+        language "C++"
+        kind "StaticLib"
+        files { "src/Box2D/**"}
+        includedirs { "include", "src/Box2D" }
+        staticruntime "On"
