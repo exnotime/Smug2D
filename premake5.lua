@@ -32,7 +32,7 @@ solution "Smug2D"
 		location ( location_path )
 		language "C++"
 		kind "ConsoleApp"
-		files { "src/**"}
+		files { "src/Core/**"}
         includedirs { "include", "src" }
         staticruntime "On" 
         configuration { "Debug" }
