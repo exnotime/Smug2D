@@ -1,3 +1,4 @@
+#include "level.as"
 
 Texture@ m_SpriteTex;
 Vec2 pos;
@@ -16,25 +17,8 @@ void init(){
     m_Sprite.tint.g = 0;
     m_Sprite.tint.b = 255;
     @m_Font = LoadFont("assets/fonts/jackinput.ttf");
+    levelInit();
     SetVsync(true);
-
-    file inFile;
-    inFile.open("test.txt","r");
-    string line = inFile.readLine();
-    if(line == "test"){
-        m_Sprite.tint.r = 255;
-    }
-
-    grid<float> testGrid(2,2);
-    testGrid[0, 0] = 1.0f;
-    testGrid[1, 0] = 2.0f;
-    testGrid[0, 1] = 3.0f;
-    testGrid[1, 1] = 4.0f;
-
-    if(testGrid[0, 0] == 1.0f){
-        m_Sprite.tint.g = 255;
-    }
-
 }
 
 void command(const string c){
@@ -80,5 +64,6 @@ void update(float dt){
 
 void render(){
     ClearWindow(0,0,0);
+    levelRender();
     DrawText(m_Font, "FPS:" + fps, Vec2(1600 - 300, 10), 30);
 }
