@@ -7,7 +7,7 @@ Font@ m_Font;
 
 void init(){
     print("initializing");
-    @m_SpriteTex = LoadTexture("assets/potato.png");
+    @m_SpriteTex = LoadTexture("assets/textures/potato.png");
     pos.x = 200;
     pos.y = 500;
     //Create a permanent sprite that does not need call draw every frame
@@ -15,7 +15,7 @@ void init(){
     m_Sprite.tint.r = 0;
     m_Sprite.tint.g = 0;
     m_Sprite.tint.b = 255;
-    @m_Font = LoadFont("assets/jackinput.ttf");
+    @m_Font = LoadFont("assets/fonts/jackinput.ttf");
     SetVsync(true);
 
     file inFile;

@@ -38,7 +38,7 @@ namespace Console {
 		m_Engine = engine;
 		m_Ctx = ctx;
 		m_Module = engine->GetModule("main.as"); //engine->GetModule("Console", asEGMFlags::asGM_CREATE_IF_NOT_EXISTS);
-		m_Font.loadFromFile("assets/jackinput.ttf");
+		m_Font.loadFromFile("assets/fonts/jackinput.ttf");
 		m_Engine->RegisterGlobalFunction("bool IsConsoleOpen()", asFUNCTION(IsConsoleOpen), asCALL_CDECL);
 		m_Engine->RegisterGlobalFunction("void ConsolePrint(const string str)", asFUNCTION(ConsolePrint), asCALL_CDECL);
 		m_Selection = -1;
