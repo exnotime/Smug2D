@@ -96,7 +96,6 @@ int main(int argc, char** argv) {
 	}
 	r = m_asContext->Prepare(m_InitFunc);
 	r = m_asContext->Execute();
-
 	sf::Clock clock;
 	while (window.isOpen()) {
 		
