@@ -1,5 +1,6 @@
 #include "Console.h"
 #include <angelscript.h>
+#include <fstream>
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
@@ -26,6 +27,30 @@ namespace Console {
 	float BlinkEmptyTime = 0.3f;
 	bool m_ScriptConsole = true;
 
+	void AddHistoryEntry( const std::string& str ) {
+		m_History.push_back(m_Buffer);
+
+		std::ofstream historyFile;
+		historyFile.open( "console.txt", std::ios::app );
+		if ( historyFile.is_open() ) {
+			historyFile << str << std::endl;
+			historyFile.close();
+		}
+	}
+
+	void LoadHistoryFromFile() {
+		m_History.clear();
+		std::ifstream historyFile;
+		historyFile.open( "console.txt" );
+		if ( historyFile.is_open() ) {
+			std::string command;
+			while ( std::getline( historyFile, command ) ) {
+				m_History.push_back(command);
+			}
+			historyFile.close();
+		}
+	}
+
 	bool IsConsoleOpen() {
 		return m_Open;
 	}
@@ -44,6 +69,7 @@ namespace Console {
 		m_Selection = -1;
 		m_Cursor = 0;
 		m_BlinkTimer = 0;
+		LoadHistoryFromFile();
 	}
 
 	void RegisterKeyEvent(const sf::Event& e) {
@@ -90,7 +116,7 @@ namespace Console {
 							r = m_Ctx->Execute();
 						}
 					}
-					m_History.push_back(m_Buffer);
+					AddHistoryEntry( m_Buffer );
 					m_Buffer.clear();
 					m_Cursor = 0;
 				}
