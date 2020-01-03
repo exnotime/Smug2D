@@ -12,6 +12,7 @@
 #include "if_math.h"
 #include "if_input.h"
 #include "Console.h"
+#include "PhysicsManager.h"
 #include "TextureManager.h"
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -89,6 +90,8 @@ int main(int argc, char** argv) {
 	bool paused = false;
 	if_render::SetWindow(&window);
 	Console::Init(m_asEngine, m_asContext);
+	// Create Physics
+	PhysicsManager::GetInstance().Init();
 	//call init
 	bool loadSuccess = LoadScript(m_asEngine, m_asContext, false);
 	while(!loadSuccess) {
