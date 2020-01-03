@@ -13,43 +13,22 @@ void init(){
     pos.y = 500;
     //Create a permanent sprite that does not need call draw every frame
     @m_Sprite = CreateSprite(m_SpriteTex, pos);
-    m_Sprite.tint.r = 0;
-    m_Sprite.tint.g = 0;
+    m_Sprite.tint.r = 255;
+    m_Sprite.tint.g = 255;
     m_Sprite.tint.b = 255;
     @m_Font = LoadFont("assets/fonts/jackinput.ttf");
+
     levelInit();
     SetVsync(true);
-
-    file inFile;
-    inFile.open("test.txt","r");
-    string line = inFile.readLine();
-    if(line == "test"){
-        m_Sprite.tint.r = 255;
-    }
-
-    grid<float> testGrid(2,2);
-    testGrid[0, 0] = 1.0f;
-    testGrid[1, 0] = 2.0f;
-    testGrid[0, 1] = 3.0f;
-    testGrid[1, 1] = 4.0f;
-
-    if(testGrid[0, 0] == 1.0f){
-        m_Sprite.tint.g = 255;
-    }
 }
 
 void command(const string c){
-    if(c == "nice"){
-        SetVsync(false);
-    } else if ( c == "reload_level" ) {
+    if ( c == "reload_level" ) {
         reloadLevelGrid();
     }
 }
 
 bool reload(){
-    m_Sprite.tint.r = 255;
-    m_Sprite.tint.g = 255;
-    m_Sprite.tint.b = 255;
     reloadLevelGrid();
     return true;
 }
@@ -72,18 +51,27 @@ void update(float dt){
     if(IsKeyDown(Key::Down)){
         m_Sprite.pos.y += speed * dt;
     }
-    if(IsKeyDown(Key::E)){
-        m_Sprite.scale.x += 0.5f * dt;
-        m_Sprite.scale.y += 0.5f * dt;
-    }
-    if(IsKeyDown(Key::R)){
-        m_Sprite.scale.x -= 0.5f * dt;
-        m_Sprite.scale.y -= 0.5f * dt;
+    if(IsMouseButtonPushed(MouseButton::Left)){
+        Vec2 mousePos = MousePos();
+        print("mouse pos " + mousePos.x + ", " + mousePos.y );
+        print("sprite pos " + m_Sprite.pos.x + ", " + m_Sprite.pos.y );
+        print("sprite size " + m_Sprite.textureSize.x + ", " + m_Sprite.textureSize.y );
+        if( mousePos.x >= m_Sprite.pos.x && mousePos.x <= m_Sprite.pos.x + m_Sprite.textureSize.x &&
+            mousePos.y >= m_Sprite.pos.y && mousePos.y <= m_Sprite.pos.y + m_Sprite.textureSize.y){
+
+            m_Sprite.tint.r = 255;
+            m_Sprite.tint.g = 0;
+            m_Sprite.tint.b = 0;
+        }else{
+            m_Sprite.tint.r = 255;
+            m_Sprite.tint.g = 255;
+            m_Sprite.tint.b = 255;
+        }
     }
 }
 
 void render(){
     ClearWindow(0,0,0);
     levelRender();
-    DrawText(m_Font, "FPS:" + fps, Vec2(1600 - 300, 10), 30);
+    DrawText(m_Font, "FPS:" + fps, Vec2(1600 - 300, 10), Color(255,255,255), 30);
 }

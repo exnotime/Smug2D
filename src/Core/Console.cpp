@@ -168,23 +168,29 @@ namespace Console {
 		//draw log
 		const int c = std::min(BufferSize, (int)m_Log.size());
 		const int start = m_Log.size() - c;
+		const int charSize = 25;
+		sf::RectangleShape background;
+		background.setFillColor(sf::Color::Black);
+		background.setSize(sf::Vector2f(window->getSize().x, (c + 1) * charSize + 10));
+		window->draw(background);
 		sf::Text t;
 		t.setFont(m_Font);
+		t.setCharacterSize(charSize);
 		for (int i = 0; i < c; ++i) {
 			t.setString(m_Log[start + i]);
-			t.setPosition(0, i * 30);
+			t.setPosition(0, i * charSize);
 			window->draw(t);
 		}
 		std::string beforeCursor, afterCursor;
 		beforeCursor = m_Buffer.substr(0, m_Cursor);
 		afterCursor = m_Buffer.substr(m_Cursor, m_Buffer.size() - m_Cursor);
 		t.setString("> " + beforeCursor);
-		t.setPosition(0, c * 30);
+		t.setPosition(0, c * charSize);
 		window->draw(t);
 		float textSize = t.getLocalBounds().width;
 		std::string cursor = m_BlinkTimer > BlinkEmptyTime ? "|" : " ";
 		t.setString(cursor + afterCursor);
-		t.setPosition(textSize, c * 30);
+		t.setPosition(textSize, c * charSize);
 		window->draw(t);
 	}
 }

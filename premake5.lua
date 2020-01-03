@@ -13,7 +13,7 @@ solution "Smug2D"
             location_path = location_path .. "/projects"
         end
     disablewarnings { "4251" }
-    systemversion ("10.0.17763.0")
+    systemversion ("10.0") --use latest
     configuration { "Debug" }
         defines { "DEBUG" }
         symbols "On"

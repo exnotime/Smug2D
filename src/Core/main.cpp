@@ -103,9 +103,8 @@ int main(int argc, char** argv) {
 	r = m_asContext->Execute();
 	sf::Clock clock;
 	while (window.isOpen()) {
-		
 		//call update
-		if_input::Update();
+		
 		float deltaTime = clock.getElapsedTime().asSeconds();
 		clock.restart();
 		if (!paused) {
@@ -115,9 +114,11 @@ int main(int argc, char** argv) {
 			//call render
 			r = m_asContext->Prepare(m_RenderFunc);
 			r = m_asContext->Execute();
-			if_render::RenderSprites();
+
+			if_render::Render();
 		}
 		Console::Render(&window, deltaTime);
+		if_input::Update(&window);
 		window.display();
 
 		sf::Event event;
@@ -143,7 +144,6 @@ int main(int argc, char** argv) {
 					} else {
 						window.setTitle("AngelGame(Running)");
 					}
-					
 				}
 			}
 		}

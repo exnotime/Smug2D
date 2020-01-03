@@ -48,15 +48,16 @@ void levelInit() {
 void levelRender() {
     // Draw level-grid
     Vec2 tileScale( 1.0f, 1.0f );
+    int layer = 2;
     for ( uint y = 0; y < m_LevelGrid.height(); ++y ) {
         for ( uint x = 0; x < m_LevelGrid.width(); ++x ) {
             Vec2 tilePos( x * 100.0f, y * 100.0f );
             if ( m_LevelGrid[x,y] < 0 ) {
-                DrawSprite( m_TileErrorTex, tilePos, tileScale );
+                DrawSprite( m_TileErrorTex, tilePos, tileScale, layer );
             } else if ( m_LevelGrid[x,y] == 0 ) {
-                DrawSprite( m_TileEmptyTex, tilePos, tileScale );
+                DrawSprite( m_TileEmptyTex, tilePos, tileScale, layer );
             } else if ( m_LevelGrid[x,y] == 1 ) {
-                DrawSprite( m_TileFilledTex, tilePos, tileScale );
+                DrawSprite( m_TileFilledTex, tilePos, tileScale, layer );
             }
         }
     }

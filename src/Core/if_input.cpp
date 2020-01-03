@@ -1,6 +1,7 @@
 #include "if_input.h"
 #include <angelscript.h>
 #include <SFML/Window.hpp>
+#include "if_math.h"
 
 using namespace AngelScript;
 
@@ -8,8 +9,8 @@ struct InputState {
 	bool keyState[sf::Keyboard::KeyCount];
 	bool lastKeyState[sf::Keyboard::KeyCount];
 	bool mouseButtonState[sf::Mouse::ButtonCount];
-	float mouseX;
-	float mouseY;
+	bool lastMouseButtonState[sf::Mouse::ButtonCount];
+	sf::Window* window;
 };
 
 static InputState g_State;
@@ -24,6 +25,24 @@ bool IsKeyPushed(sf::Keyboard::Key key) {
 
 bool IsKeyReleased(sf::Keyboard::Key key) {
 	return !g_State.keyState[key] && g_State.lastKeyState[key];
+}
+
+bool IsMouseButtonDown(sf::Mouse::Button button) {
+	return g_State.mouseButtonState[button];
+}
+
+bool IsMouseButtonPushed(sf::Mouse::Button button) {
+	bool ret = g_State.mouseButtonState[button] && !g_State.lastMouseButtonState[button];
+	return ret;
+}
+
+bool IsMouseButtonReleased(sf::Mouse::Button button) {
+	return !g_State.mouseButtonState[button] && g_State.lastMouseButtonState[button];
+}
+
+Vec2 MousePos() {
+	sf::Vector2i p = sf::Mouse::getPosition(*g_State.window);
+	return Vec2(p.x, p.y);
 }
 
 namespace if_input {
@@ -128,10 +147,25 @@ namespace if_input {
 		engine->RegisterEnumValue("Key", "F12", sf::Keyboard::F12);
 		engine->RegisterEnumValue("Key", "Pause", sf::Keyboard::Pause);
 
+		engine->RegisterEnum("MouseButton");
+		engine->RegisterEnumValue("MouseButton", "Left", sf::Mouse::Button::Left);
+		engine->RegisterEnumValue("MouseButton", "Right", sf::Mouse::Button::Right);
+		engine->RegisterEnumValue("MouseButton", "Middle", sf::Mouse::Button::Middle);
+		engine->RegisterEnumValue("MouseButton", "Forward", sf::Mouse::Button::XButton1);
+		engine->RegisterEnumValue("MouseButton", "Backward", sf::Mouse::Button::XButton2);
+
 		engine->RegisterGlobalFunction("bool IsKeyDown(Key k)", asFUNCTION(IsKeyDown), asCALL_CDECL);
 		engine->RegisterGlobalFunction("bool IsKeyPushed(Key k)", asFUNCTION(IsKeyPushed), asCALL_CDECL);
 		engine->RegisterGlobalFunction("bool IsKeyReleased(Key k)", asFUNCTION(IsKeyReleased), asCALL_CDECL);
+
+		engine->RegisterGlobalFunction("bool IsMouseButtonDown(MouseButton mb)", asFUNCTION(IsMouseButtonDown), asCALL_CDECL);
+		engine->RegisterGlobalFunction("bool IsMouseButtonPushed(MouseButton mb)", asFUNCTION(IsMouseButtonPushed), asCALL_CDECL);
+		engine->RegisterGlobalFunction("bool IsMouseButtonReleased(MouseButton mb)", asFUNCTION(IsMouseButtonReleased), asCALL_CDECL);
+
+		engine->RegisterGlobalFunction("Vec2 MousePos()", asFUNCTION(MousePos), asCALL_CDECL);
+
 		memset(&g_State.keyState, 0x0, sizeof(bool) * sf::Keyboard::KeyCount);
+		memset(&g_State.mouseButtonState, 0x0, sizeof(bool)* sf::Mouse::Button::ButtonCount);
 	}
 
 	void RegisterInputEvent(sf::Event& e) {
@@ -141,9 +175,17 @@ namespace if_input {
 		else if(e.type == sf::Event::EventType::KeyReleased) {
 			g_State.keyState[e.key.code] = false;
 		}
+		else if (e.type == sf::Event::EventType::MouseButtonPressed) {
+			g_State.mouseButtonState[e.mouseButton.button] = true;
+		}
+		else if (e.type == sf::Event::EventType::MouseButtonReleased) {
+			g_State.mouseButtonState[e.mouseButton.button] = false;
+		}
 	}
 
-	void Update() {
+	void Update(sf::Window* window) {
+		g_State.window = window;
 		memcpy(&g_State.lastKeyState, &g_State.keyState, sizeof(bool) * sf::Keyboard::KeyCount);
+		memcpy(&g_State.lastMouseButtonState, &g_State.mouseButtonState, sizeof(bool) * sf::Mouse::Button::ButtonCount);
 	}
 }

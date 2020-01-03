@@ -6,10 +6,11 @@ namespace AngelScript {
 
 namespace sf {
 	class Event;
+	class Window;
 }
 
 namespace if_input {
 	void LoadInputInterface(AngelScript::asIScriptEngine* engine);
 	void RegisterInputEvent(sf::Event& e);
-	void Update();
+	void Update(sf::Window* window);
 }
