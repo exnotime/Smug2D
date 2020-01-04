@@ -5,6 +5,9 @@
 #include "sprite.h"
 #include "if_math.h"
 #include "TextureManager.h"
+#include "EntityManager.h"
+#include "Components.h"
+#include "ComponentManager.h"
 
 using namespace AngelScript;
 sf::RenderWindow* g_Window = nullptr;
@@ -171,7 +174,28 @@ void DrawTextToWindow(const Text* t) {
 	g_Window->draw(text);
 }
 
+
 void if_render::Render() {
+	//for now just render all sprite components as immediate mode sprites
+	EntityManager& em = EntityManager::GetInstance();
+	ComponentManager& cm = ComponentManager::GetInstance();
+	auto& entities = em.GetEntityList();
+	for (auto& e : entities) {
+		int flags = ComponentType::TRANSFORM | ComponentType::SPRITE;
+		if (e.ComponentBitfield & flags) {
+			TransformComponent* tc = (TransformComponent*)cm.GetComponent(e, ComponentType::TRANSFORM);
+			SpriteComponent* sc = (SpriteComponent*)cm.GetComponent(e, ComponentType::SPRITE);
+
+			Sprite spr;
+			spr.position = tc->position; // todo handle local origin
+			spr.layer = sc->layer;
+			spr.scale = tc->scale;
+			spr.texture = sc->texture;
+			spr.textureRect = sc->textureRect;
+			spr.tint = sc->tint;
+			g_ImmediateSprites.push_back(spr);
+		}
+	}
 
 	std::sort(g_ImmediateTexts.begin(), g_ImmediateTexts.end(), [](const Text& t1, const Text& t2) ->bool {return t1.layer < t2.layer; });
 	std::sort(g_ImmediateSprites.begin(), g_ImmediateSprites.end(), [](const Sprite& s1, const Sprite& s2) ->bool {return s1.layer < s2.layer; });

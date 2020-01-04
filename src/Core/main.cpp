@@ -12,6 +12,8 @@
 #include "if_math.h"
 #include "if_input.h"
 #include "Console.h"
+#include "Components.h"
+#include "if_Entity.h"
 #include "PhysicsManager.h"
 #include "TextureManager.h"
 #define WIN32_LEAN_AND_MEAN
@@ -83,6 +85,8 @@ int main(int argc, char** argv) {
 	if_math::LoadMathInterface(m_asEngine);
 	if_render::LoadRenderInterface(m_asEngine);
 	if_input::LoadInputInterface(m_asEngine);
+	if_entity::LoadEntityInterface(m_asEngine);
+	Components::LoadComponentInterface(m_asEngine);
 
 	asIScriptContext* m_asContext = m_asEngine->CreateContext();
 	//Create window

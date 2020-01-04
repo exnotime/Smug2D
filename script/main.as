@@ -20,6 +20,10 @@ void init(){
 
     levelInit();
     SetVsync(true);
+
+    Entity@ e = CreateEntity();
+    CreateTransformComponent(e, Vec2(100,100), Vec2(1.0f, 1.0f), Vec2(0), 0.0f);
+    CreateSpriteComponent(e, m_SpriteTex, 3, Rect(), Color(255,255,255));
 }
 
 void command(const string c){
