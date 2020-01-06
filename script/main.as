@@ -1,4 +1,5 @@
 #include "level.as"
+#include "editor.as"
 
 Texture@ m_SpriteTex;
 Vec2 pos;
@@ -19,6 +20,7 @@ void init(){
     @m_Font = LoadFont("assets/fonts/jackinput.ttf");
 
     levelInit();
+    editorInit();
     SetVsync(true);
 
     EntityHandle e = CreateEntity();
@@ -72,6 +74,8 @@ void update(float dt){
             m_Sprite.tint.b = 255;
         }
     }
+
+    editorUpdate();
 }
 
 void render(){
