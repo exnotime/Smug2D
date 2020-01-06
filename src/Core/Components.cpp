@@ -6,39 +6,45 @@ using namespace AngelScript;
 namespace Components {
 
 
-	void CreateTransformComponentFull(Entity& ent, Vec2 pos, Vec2 scale, Vec2 localOrigin, float rotation) {
+	void CreateTransformComponentFull(uint32_t uid, Vec2 pos, Vec2 scale, Vec2 localOrigin, float rotation) {
 		TransformComponent tc;
 		tc.position = pos;
 		tc.scale = scale;
 		tc.localOrigin = localOrigin;
 		tc.rotation = rotation;
-		ComponentManager::GetInstance().CreateComponent(&tc, ent, ComponentType::TRANSFORM);
+		Entity& e = EntityManager::GetInstance().GetEntity(uid);
+		ComponentManager::GetInstance().CreateComponent(&tc, e, ComponentType::TRANSFORM);
 	}
 
-	void CreateTransformComponent(Entity& ent) {
+	void CreateTransformComponent(uint32_t uid) {
 		TransformComponent tc;
-		ComponentManager::GetInstance().CreateComponent(&tc, ent, ComponentType::TRANSFORM);
+		Entity& e = EntityManager::GetInstance().GetEntity(uid);
+		ComponentManager::GetInstance().CreateComponent(&tc, e, ComponentType::TRANSFORM);
 	}
 
-	TransformComponent* GetTransformComponent(Entity& e) {
+	TransformComponent* GetTransformComponent(uint32_t uid) {
+		Entity& e = EntityManager::GetInstance().GetEntity(uid);
 		return (TransformComponent*)ComponentManager::GetInstance().GetComponent(e, ComponentType::TRANSFORM);
 	}
 
-	void CreateSpriteComponentFull(Entity& ent, sf::Texture* texture, int layer, Rect textureRect, sf::Color color) {
+	void CreateSpriteComponentFull(uint32_t uid, sf::Texture* texture, int layer, Rect textureRect, sf::Color color) {
 		SpriteComponent sc;
 		sc.texture = texture;
 		sc.layer = layer;
 		sc.textureRect = { 0.0f, 0.0f, (float)texture->getSize().x, (float)texture->getSize().y };
 		sc.tint = color;
-		ComponentManager::GetInstance().CreateComponent(&sc, ent, ComponentType::SPRITE);
+		Entity& e = EntityManager::GetInstance().GetEntity(uid);
+		ComponentManager::GetInstance().CreateComponent(&sc, e, ComponentType::SPRITE);
 	}
 
-	void CreateSpriteComponent(Entity& ent) {
+	void CreateSpriteComponent(uint32_t uid) {
 		SpriteComponent sc;
-		ComponentManager::GetInstance().CreateComponent(&sc, ent, ComponentType::SPRITE);
+		Entity& e = EntityManager::GetInstance().GetEntity(uid);
+		ComponentManager::GetInstance().CreateComponent(&sc, e, ComponentType::SPRITE);
 	}
 
-	SpriteComponent* GetSpriteComponent(Entity& e) {
+	SpriteComponent* GetSpriteComponent(uint32_t uid) {
+		Entity& e = EntityManager::GetInstance().GetEntity(uid);
 		return (SpriteComponent*)ComponentManager::GetInstance().GetComponent(e, ComponentType::SPRITE);
 	}
 
@@ -64,11 +70,11 @@ namespace Components {
 		engine->RegisterObjectProperty("SpriteComponent", "Rect textureRect", asOFFSET(SpriteComponent, textureRect));
 		engine->RegisterObjectProperty("SpriteComponent", "Color color", asOFFSET(SpriteComponent, tint));
 
-		engine->RegisterGlobalFunction("void CreateTransformComponent(Entity& e, Vec2 pos, Vec2 scale, Vec2 localOrigin, float rotation)", asFUNCTION(CreateTransformComponentFull), asCALL_CDECL);
-		engine->RegisterGlobalFunction("void CreateTransformComponent(Entity& e)", asFUNCTION(CreateTransformComponent), asCALL_CDECL);
-		engine->RegisterGlobalFunction("TransformComponent@ GetTransformComponent(Entity& e)", asFUNCTION(GetTransformComponent), asCALL_CDECL);
-		engine->RegisterGlobalFunction("void CreateSpriteComponent(Entity& ent, Texture@ texture, int layer, Rect textureRect, Color color)", asFUNCTION(CreateSpriteComponentFull), asCALL_CDECL);
-		engine->RegisterGlobalFunction("void CreateSpriteComponent(Entity& e)", asFUNCTION(CreateSpriteComponent), asCALL_CDECL);
-		engine->RegisterGlobalFunction("SpriteComponent@ GetSpriteComponent(Entity& e)", asFUNCTION(GetSpriteComponent), asCALL_CDECL);
+		engine->RegisterGlobalFunction("void CreateTransformComponent(EntityHandle e, Vec2 pos, Vec2 scale, Vec2 localOrigin, float rotation)", asFUNCTION(CreateTransformComponentFull), asCALL_CDECL);
+		engine->RegisterGlobalFunction("void CreateTransformComponent(EntityHandle e)", asFUNCTION(CreateTransformComponent), asCALL_CDECL);
+		engine->RegisterGlobalFunction("TransformComponent@ GetTransformComponent(EntityHandle e)", asFUNCTION(GetTransformComponent), asCALL_CDECL);
+		engine->RegisterGlobalFunction("void CreateSpriteComponent(EntityHandle e, Texture@ texture, int layer, Rect textureRect, Color color)", asFUNCTION(CreateSpriteComponentFull), asCALL_CDECL);
+		engine->RegisterGlobalFunction("void CreateSpriteComponent(EntityHandle e)", asFUNCTION(CreateSpriteComponent), asCALL_CDECL);
+		engine->RegisterGlobalFunction("SpriteComponent@ GetSpriteComponent(EntityHandle e)", asFUNCTION(GetSpriteComponent), asCALL_CDECL);
 	}
 }

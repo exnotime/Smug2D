@@ -1,5 +1,6 @@
 #include "EntityManager.h"
 #include <ComponentManager.h>
+#include <algorithm>
 
 EntityManager::EntityManager() {}
 
@@ -22,7 +23,7 @@ Entity& EntityManager::CreateEntity() {
 }
 
 Entity& EntityManager::GetEntity(uint32_t UID) {
-	return m_Entities[UID];
+	return *std::find_if(m_Entities.begin(), m_Entities.end(), [&](const Entity& e1)->bool {return UID == e1.UID; });
 }
 
 void EntityManager::RemoveEntity(Entity& entity) {

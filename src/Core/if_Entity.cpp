@@ -5,16 +5,21 @@
 #include <new>
 using namespace AngelScript;
 
-Entity* CreateEntity() {
-	return &EntityManager::GetInstance().CreateEntity();
+uint32_t CreateEntity() {
+	return EntityManager::GetInstance().CreateEntity().UID;
 }
 
-void DestroyEntity(Entity* e) {
-	EntityManager::GetInstance().RemoveEntity(*e);
+void DestroyEntity(uint32_t uid) {
+	EntityManager::GetInstance().RemoveEntity(EntityManager::GetInstance().GetEntity(uid));
+}
+
+uint64_t GetEntityComponents(uint32_t uid) {
+	return EntityManager::GetInstance().GetEntity(uid).ComponentBitfield;
 }
 
 void if_entity::LoadEntityInterface(asIScriptEngine* engine) {
-	engine->RegisterObjectType("Entity", sizeof(Entity), asOBJ_REF | asOBJ_NOCOUNT);
-	engine->RegisterGlobalFunction("Entity@ CreateEntity()", asFUNCTION(CreateEntity), asCALL_CDECL);
-	engine->RegisterGlobalFunction("void DestroyEntity(Entity@ e)", asFUNCTION(DestroyEntity), asCALL_CDECL);
+	engine->RegisterTypedef("EntityHandle", "uint");
+	engine->RegisterGlobalFunction("EntityHandle CreateEntity()", asFUNCTION(CreateEntity), asCALL_CDECL);
+	engine->RegisterGlobalFunction("void DestroyEntity(EntityHandle e)", asFUNCTION(DestroyEntity), asCALL_CDECL);
+	engine->RegisterGlobalFunction("uint64 GetEntityComponents(EntityHandle e)", asFUNCTION(GetEntityComponents), asCALL_CDECL);
 }
