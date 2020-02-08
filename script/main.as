@@ -9,27 +9,18 @@ Sprite@ m_Sprite;
 Font@ m_Font;
 AnimationHandle m_Animation;
 EntityHandle m_AnimatedEntity;
-
+Camera m_Camera;
 void init(){
     print("initializing");
     @m_SpriteTex = LoadTexture("assets/textures/potato.png");
     @m_AnimalTex = LoadTexture("assets/textures/animals1.png");
     pos.x = 200;
     pos.y = 500;
-    //Create a permanent sprite that does not need call draw every frame
-    @m_Sprite = CreateSprite(m_SpriteTex, pos);
-    m_Sprite.tint.r = 255;
-    m_Sprite.tint.g = 255;
-    m_Sprite.tint.b = 255;
     @m_Font = LoadFont("assets/fonts/jackinput.ttf");
     m_Animation = LoadAnimation("assets/sprites/test_frames.sprite");
     levelInit();
     editorInit();
     SetVsync(true);
-
-    EntityHandle e = CreateEntity();
-    CreateTransformComponent(e, Vec2(100,100), Vec2(1.0f, 1.0f), Vec2(50,50), 30.0f);
-    CreateSpriteComponent(e, m_SpriteTex, 3, Rect(), Color(255,255,255));
 
     m_AnimatedEntity = CreateEntity();
     CreateTransformComponent(m_AnimatedEntity, Vec2(300,100), Vec2(10.0f, 10.0f), Vec2(0, 0), 0.0f);
@@ -38,6 +29,11 @@ void init(){
     sc.layer = 3;
     sc.color = Color(255,255,255);
     CreateAnimationComponent(m_AnimatedEntity, m_Animation);
+
+    m_Camera.position = Vec2(0,0);
+    m_Camera.size = Vec2(1600,900);
+    m_Camera.viewport = Rect(0, 0, 1, 1);
+    m_Camera.rotation = 0.0f;
 }
 
 void command(const string c){
@@ -73,11 +69,31 @@ void update(float dt){
         transform.position.y += speed * dt;
     }
 
+    if(IsKeyDown(Key::A)){
+        m_Camera.position.x -= speed * dt;
+    }
+    if(IsKeyDown(Key::D)){
+        m_Camera.position.x  += speed * dt;
+    }
+    if(IsKeyDown(Key::W)){
+        m_Camera.position.y  -= speed * dt;
+    }
+    if(IsKeyDown(Key::S)){
+        m_Camera.position.y  += speed * dt;
+    }
+    if(IsKeyDown(Key::E)){
+        m_Camera.rotation  += 100 * dt;
+    }
+    if(IsKeyDown(Key::Q)){
+        m_Camera.rotation  -= 100 * dt;
+    }
+
     editorUpdate();
 }
 
 void render(){
     ClearWindow(0,0,0);
+    AddCamera(m_Camera);
     levelRender();
     DrawText(m_Font, "FPS:" + fps, Vec2(1600 - 300, 10), Color(255,255,255), 30);
 }

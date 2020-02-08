@@ -2,6 +2,7 @@
 #include <angelscript.h>
 #include <SFML/Window.hpp>
 #include "if_math.h"
+#include "Camera.h"
 
 using namespace AngelScript;
 

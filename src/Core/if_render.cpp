@@ -8,11 +8,13 @@
 #include "EntityManager.h"
 #include "Components.h"
 #include "ComponentManager.h"
+#include "Camera.h"
 
 using namespace AngelScript;
 sf::RenderWindow* g_Window = nullptr;
 std::vector<Sprite*> g_Sprites;
 std::vector<Sprite> g_ImmediateSprites;
+
 #define DEFAULT_LAYER 3
 uint32_t g_SpriteId = 0;
 
@@ -25,6 +27,7 @@ struct Text {
 	int layer;
 };
 
+std::vector<Camera> g_Cameras;
 std::vector<Text> g_ImmediateTexts;
 
 void SortSprites() {
@@ -123,6 +126,10 @@ void ConstructColorAlpha(int r, int g, int b, int a, void* memory) {
 	new(memory) sf::Color(r, g, b, a);
 }
 
+void AddCamera(Camera& c) {
+	g_Cameras.push_back(c);
+}
+
 void if_render::LoadRenderInterface(AngelScript::asIScriptEngine* engine) {
 	engine->RegisterGlobalFunction("void ClearWindow(int r, int g, int b)", asFUNCTION(ClearWindow), asCALL_CDECL);
 	engine->RegisterObjectType("Texture", sizeof(sf::Texture*), asOBJ_REF | asOBJ_NOCOUNT);
@@ -151,6 +158,13 @@ void if_render::LoadRenderInterface(AngelScript::asIScriptEngine* engine) {
 	engine->RegisterGlobalFunction("void UnloadFont(Font@ font)", asFUNCTION(UnloadFont), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void DrawText(Font@ font, const string str, const Vec2 pos, const Color c, const int charSize = 30, const int layer = 2)", asFUNCTION(DrawText), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void SetVsync(bool v)", asFUNCTION(SetVsync), asCALL_CDECL);
+	engine->RegisterObjectType("Camera", sizeof(Camera), asOBJ_POD | asOBJ_VALUE | asGetTypeTraits<Camera>());
+	engine->RegisterObjectProperty("Camera", "Vec2 position", asOFFSET(Camera, position));
+	engine->RegisterObjectProperty("Camera", "Vec2 size", asOFFSET(Camera, size));
+	engine->RegisterObjectProperty("Camera", "float rotation", asOFFSET(Camera, rotation));
+	engine->RegisterObjectProperty("Camera", "Rect viewport", asOFFSET(Camera, viewport));
+	engine->RegisterGlobalFunction("void AddCamera(Camera c)", asFUNCTION(AddCamera), asCALL_CDECL);
+
 }
 
 void if_render::SetWindow(sf::RenderWindow* window) {
@@ -207,33 +221,45 @@ void if_render::Render() {
 	std::sort(g_ImmediateTexts.begin(), g_ImmediateTexts.end(), [](const Text& t1, const Text& t2) ->bool {return t1.layer < t2.layer; });
 	std::sort(g_ImmediateSprites.begin(), g_ImmediateSprites.end(), [](const Sprite& s1, const Sprite& s2) ->bool {return s1.layer < s2.layer; });
 
-	int currentSprite = 0;
-	int currentImmSprite = 0;
-	int currentImmText = 0;
-	for (uint32_t l = 0; l < 128; ++l) {
-		for (int i = currentSprite; i < g_Sprites.size(); ++i, currentSprite++) {
-			if (g_Sprites[i]->layer <= l) {
-				DrawSpriteToWindow(g_Sprites[i]);
-			} else {
-				break;
+	for (auto& camera : g_Cameras) {
+		sf::View view;
+		view.setSize(camera.size.x, camera.size.y);
+		view.setRotation(camera.rotation);
+		view.setCenter(camera.position.x + camera.size.x * 0.5f, camera.position.y + camera.size.y * 0.5f);
+		view.setViewport(sf::FloatRect(camera.viewport.x, camera.viewport.y, camera.viewport.w, camera.viewport.h));
+		g_Window->setView(view);
+
+		int currentSprite = 0;
+		int currentImmSprite = 0;
+		int currentImmText = 0;
+		for (uint32_t l = 0; l < 128; ++l) {
+			for (int i = currentSprite; i < g_Sprites.size(); ++i, currentSprite++) {
+				if (g_Sprites[i]->layer <= l) {
+					DrawSpriteToWindow(g_Sprites[i]);
+				}
+				else {
+					break;
+				}
 			}
-		}
-		for (int i = currentImmSprite; i < g_ImmediateSprites.size(); ++i, currentImmSprite++) {
-			if (g_ImmediateSprites[i].layer <= l) {
-				DrawSpriteToWindow(&g_ImmediateSprites[i]);
-			} else {
-				break;
+			for (int i = currentImmSprite; i < g_ImmediateSprites.size(); ++i, currentImmSprite++) {
+				if (g_ImmediateSprites[i].layer <= l) {
+					DrawSpriteToWindow(&g_ImmediateSprites[i]);
+				}
+				else {
+					break;
+				}
 			}
-		}
-		for (int i = currentImmText; i < g_ImmediateTexts.size(); ++i, currentImmText++) {
-			if (g_ImmediateTexts[i].layer <= l) {
-				DrawTextToWindow(&g_ImmediateTexts[i]);
-			} else {
-				break;
+			for (int i = currentImmText; i < g_ImmediateTexts.size(); ++i, currentImmText++) {
+				if (g_ImmediateTexts[i].layer <= l) {
+					DrawTextToWindow(&g_ImmediateTexts[i]);
+				}
+				else {
+					break;
+				}
 			}
 		}
 	}
-
+	g_Cameras.clear();
 	g_ImmediateTexts.clear();
 	g_ImmediateSprites.clear();
 	

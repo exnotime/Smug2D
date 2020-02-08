@@ -21,6 +21,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+#include "imgui/imgui.h"
+#include "imgui/imgui-SFML.h"
+
 using namespace AngelScript;
 
 void Print(const std::string& msg) {
@@ -94,9 +97,11 @@ int main(int argc, char** argv) {
 	asIScriptContext* m_asContext = m_asEngine->CreateContext();
 	//Create window
 	sf::RenderWindow window(sf::VideoMode(1600, 900), "AngelGame(Running)");
+
 	bool paused = false;
 	if_render::SetWindow(&window);
 	Console::Init(m_asEngine, m_asContext);
+	ImGui::SFML::Init(window);
 	// Create Physics
 	PhysicsManager::GetInstance().Init();
 	//call init
@@ -111,26 +116,9 @@ int main(int argc, char** argv) {
 
 	sf::Clock clock;
 	while (window.isOpen()) {
-		//call update
-		float deltaTime = clock.getElapsedTime().asSeconds();
-		clock.restart();
-		if (!paused) {
-			r = m_asContext->Prepare(m_UpdateFunc);
-			r = m_asContext->SetArgFloat(0, deltaTime);
-			r = m_asContext->Execute();
-			//call render
-			r = m_asContext->Prepare(m_RenderFunc);
-			r = m_asContext->Execute();
-
-			SpriteAnimation::Update(deltaTime);// update all animation components
-			if_render::Render();
-		}
-		Console::Render(&window, deltaTime);
-		if_input::Update(&window);
-		window.display();
-
 		sf::Event event;
 		while (window.pollEvent(event)) {
+			ImGui::SFML::ProcessEvent(event);
 			if (event.type == sf::Event::EventType::Closed) {
 				window.close();
 			}
@@ -149,12 +137,42 @@ int main(int argc, char** argv) {
 					paused = !paused;
 					if (paused) {
 						window.setTitle("AngelGame(Paused)");
-					} else {
+					}
+					else {
 						window.setTitle("AngelGame(Running)");
 					}
 				}
 			}
 		}
+
+		//call update
+		sf::Time deltaTime = clock.restart();
+		ImGui::SFML::Update(window, deltaTime);
+		float dt = deltaTime.asSeconds();
+		
+		
+
+		SpriteAnimation::Update(dt);// update all animation components
+		if (!paused) {
+			r = m_asContext->Prepare(m_UpdateFunc);
+			r = m_asContext->SetArgFloat(0, dt);
+			r = m_asContext->Execute();
+			//call render
+			r = m_asContext->Prepare(m_RenderFunc);
+			r = m_asContext->Execute();
+
+			if_render::Render();
+		}
+
+		ImGui::ShowDemoWindow();
+
+		Console::Render(&window, dt);
+
+		ImGui::SFML::Render();
+		window.resetGLStates();
+
+		if_input::Update(&window);
+		window.display();
 	}
 	return 0;
 }
