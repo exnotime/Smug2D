@@ -71,6 +71,7 @@ Sprite* CreateSprite(sf::Texture* texture, const Vec2 pos) {
 	spr->textureSize.y = size.y;
 	spr->position = pos;
 	spr->layer = DEFAULT_LAYER;
+	spr->tint = sf::Color::White;
 	spr->textureRect = { 0.0f, 0.0f, (float)size.x, (float)size.y };
 	spr->scale = { 1.0f, 1.0f };
 	spr->id = g_SpriteId++;

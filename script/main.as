@@ -1,4 +1,5 @@
 #include "level.as"
+#include "editor.as"
 
 Texture@ m_SpriteTex;
 Texture@ m_AnimalTex;
@@ -23,6 +24,7 @@ void init(){
     @m_Font = LoadFont("assets/fonts/jackinput.ttf");
     m_Animation = LoadAnimation("assets/sprites/test_frames.sprite");
     levelInit();
+    editorInit();
     SetVsync(true);
 
     EntityHandle e = CreateEntity();
@@ -70,6 +72,8 @@ void update(float dt){
     if(IsKeyDown(Key::Down)){
         transform.position.y += speed * dt;
     }
+
+    editorUpdate();
 }
 
 void render(){
