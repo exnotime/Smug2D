@@ -41,9 +41,9 @@ sf::Texture* TextureManager::LoadTexture(const std::string& filename)
 	}
 }
 
-void TextureManager::UnloadTexture(Texture& texture)
+void TextureManager::UnloadTexture()
 {
-	m_TextureMap.erase(texture.filename);
+	//m_TextureMap.erase(texture.filename);
 }
 
 void TextureManager::Reload()

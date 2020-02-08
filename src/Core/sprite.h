@@ -9,6 +9,8 @@ struct Sprite {
 	Vec2 textureSize;
 	sf::Color tint;
 	uint32_t layer;
+	float rotation;
+	Vec2 localOrigin;
 	//internal engine stuff
 	uint32_t id;
 };

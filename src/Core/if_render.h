@@ -1,4 +1,5 @@
 #pragma once
+#include <if_math.h>
 
 namespace AngelScript {
 	class asIScriptEngine;
@@ -6,6 +7,7 @@ namespace AngelScript {
 
 namespace sf {
 	class RenderWindow;
+	class Texture;
 }
 
 namespace if_render {

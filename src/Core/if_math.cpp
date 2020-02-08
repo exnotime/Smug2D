@@ -10,6 +10,10 @@ void ConstructVec2XY(float x, float y, void* memory) {
 	new(memory) Vec2(x, y);
 }
 
+void ConstructRect(float x, float y, float w, float h, void* memory) {
+	new(memory) Rect(x, y, w, h);
+}
+
 void if_math::LoadMathInterface(asIScriptEngine* engine) {
 	int r = engine->RegisterObjectType("Vec2", sizeof(Vec2), asOBJ_POD | asOBJ_VALUE | asGetTypeTraits<Vec2>());
 	r = engine->RegisterObjectProperty("Vec2", "float x", asOFFSET(Vec2, x));
@@ -26,4 +30,5 @@ void if_math::LoadMathInterface(asIScriptEngine* engine) {
 	r = engine->RegisterObjectProperty("Rect", "float y", asOFFSET(Rect, y));
 	r = engine->RegisterObjectProperty("Rect", "float w", asOFFSET(Rect, w));
 	r = engine->RegisterObjectProperty("Rect", "float h", asOFFSET(Rect, h));
+	r = engine->RegisterObjectBehaviour("Rect", asBEHAVE_CONSTRUCT, "void f(float x, float y, float w, float h)", asFUNCTION(ConstructRect), asCALL_CDECL_OBJLAST);
 }

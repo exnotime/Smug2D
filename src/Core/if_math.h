@@ -33,6 +33,8 @@ struct Vec2 {
 };
 
 struct Rect {
+	Rect(): x(0),y(0),w(0),h(0) {};
+	Rect(float xx, float yy, float ww, float hh) : x(xx), y(yy), w(ww), h(hh) {};
 	float x;
 	float y;
 	float w;

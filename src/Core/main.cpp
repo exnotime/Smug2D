@@ -16,6 +16,8 @@
 #include "if_Entity.h"
 #include "PhysicsManager.h"
 #include "TextureManager.h"
+#include "SpriteAnimation.h"
+#include "if_animation.h"
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
@@ -85,6 +87,7 @@ int main(int argc, char** argv) {
 	if_math::LoadMathInterface(m_asEngine);
 	if_render::LoadRenderInterface(m_asEngine);
 	if_input::LoadInputInterface(m_asEngine);
+	if_animation::LoadAnimationInterface(m_asEngine);
 	if_entity::LoadEntityInterface(m_asEngine);
 	Components::LoadComponentInterface(m_asEngine);
 
@@ -105,10 +108,10 @@ int main(int argc, char** argv) {
 	}
 	r = m_asContext->Prepare(m_InitFunc);
 	r = m_asContext->Execute();
+
 	sf::Clock clock;
 	while (window.isOpen()) {
 		//call update
-		
 		float deltaTime = clock.getElapsedTime().asSeconds();
 		clock.restart();
 		if (!paused) {
@@ -119,6 +122,7 @@ int main(int argc, char** argv) {
 			r = m_asContext->Prepare(m_RenderFunc);
 			r = m_asContext->Execute();
 
+			SpriteAnimation::Update(deltaTime);// update all animation components
 			if_render::Render();
 		}
 		Console::Render(&window, deltaTime);

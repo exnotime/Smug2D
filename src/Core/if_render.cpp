@@ -57,6 +57,8 @@ void DrawSprite(sf::Texture* tex, const Vec2 pos, const Vec2 scale, const int la
 	spr.tint = sf::Color::White;
 	const sf::Vector2u size = spr.texture->getSize();
 	spr.textureRect = { 0.0f, 0.0f, (float)size.x, (float)size.y };
+	spr.rotation = 0;
+	spr.localOrigin = Vec2(0, 0);
 	g_ImmediateSprites.push_back(spr);
 }
 
@@ -161,6 +163,8 @@ void DrawSpriteToWindow(const Sprite* s) {
 	spr.setTextureRect(sf::IntRect(s->textureRect.x, s->textureRect.y, s->textureRect.w, s->textureRect.h));
 	spr.setPosition(sf::Vector2f(s->position.x, s->position.y));
 	spr.setScale(s->scale.x, s->scale.y);
+	spr.setRotation(s->rotation);
+	spr.setOrigin(s->localOrigin.x, s->localOrigin.y);
 	g_Window->draw(spr);
 }
 
@@ -193,6 +197,8 @@ void if_render::Render() {
 			spr.texture = sc->texture;
 			spr.textureRect = sc->textureRect;
 			spr.tint = sc->tint;
+			spr.localOrigin = tc->localOrigin;
+			spr.rotation = tc->rotation;
 			g_ImmediateSprites.push_back(spr);
 		}
 	}
