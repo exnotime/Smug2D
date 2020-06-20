@@ -1,0 +1,11 @@
+1:
+some input functions to help make a turn based game since it will be easier to react to certain types of input rather than polling all possible input every frame
+GotAnyInput() return true if there has been any input since last frame
+GetInputCount() return the input count since last frame
+GetInput(int i, int& type, int& input) return the i'th input since last frame
+2:
+Sound effect and music
+3:
+State machine base:
+Some class that can keep track of the current state of the game (eg Title screen, ingame, options menu, loading etc) and make changes from one state ot the other easier to track and debug
+4: Make graphics not depend on the texture size so much, easier to say this sprite should be 32,32 on screen even if its 4096, 4096 on disk

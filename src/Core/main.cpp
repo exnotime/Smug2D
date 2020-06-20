@@ -8,6 +8,9 @@
 #include "AngelScript/scriptfile/scriptfile.h"
 #include "AngelScript/scriptfile/scriptfilesystem.h"
 #include "AngelScript/scriptgrid/scriptgrid.h"
+#include "AngelScript/scripthandle/scripthandle.h"
+#include "AngelScript/scripthelper/scripthelper.h"
+#include "AngelScript/scriptdictionary/scriptdictionary.h"
 #include "if_render.h"
 #include "if_math.h"
 #include "if_input.h"
@@ -18,8 +21,14 @@
 #include "TextureManager.h"
 #include "SpriteAnimation.h"
 #include "if_animation.h"
+
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+
+#include "AngelScript/AngelScriptExporter.h"
+#include "AngelScript/AngelScriptDebugger.h"
+
+
 
 #include "imgui/imgui.h"
 #include "imgui/imgui-SFML.h"
@@ -28,6 +37,10 @@ using namespace AngelScript;
 
 void Print(const std::string& msg) {
 	printf("%s\n", msg.c_str());
+}
+
+void Break() {
+	DebugBreak();
 }
 
 void MessageCallback(const AngelScript::asSMessageInfo *msg, void *param) {
@@ -39,6 +52,10 @@ void MessageCallback(const AngelScript::asSMessageInfo *msg, void *param) {
 		
 	Console::ConsolePrint(msg->message);
 	printf("%s (%d, %d) : %s : %s\n", msg->section, msg->row, msg->col, type, msg->message);
+}
+
+void ExceptionCallback() {
+
 }
 
 asIScriptFunction* m_InitFunc;
@@ -74,8 +91,18 @@ bool LoadScript(asIScriptEngine* engine, asIScriptContext* ctx, bool reload) {
 	return true;
 }
 
-int main(int argc, char** argv) {
+bool TestCompileScript(asIScriptEngine* engine) {
+	CScriptBuilder builder;
+	int r = builder.StartNewModule(engine, "TestMain.as");
+	r = builder.AddSectionFromFile("script/main.as");
+	r = builder.BuildModule();
+	if (r < 0) {
+		return false;
+	}
+	return true;
+}
 
+int main(int argc, char** argv) {
 	//init angelscript engine
 	asIScriptEngine* m_asEngine = asCreateScriptEngine();
 	int r = m_asEngine->SetMessageCallback(asFUNCTION(MessageCallback), 0, asCALL_CDECL);
@@ -86,24 +113,34 @@ int main(int argc, char** argv) {
 	RegisterScriptFile(m_asEngine);
 	RegisterScriptFileSystem(m_asEngine);
 	RegisterScriptGrid(m_asEngine);
+	RegisterScriptHandle(m_asEngine);
+	RegisterScriptDictionary(m_asEngine);
 	m_asEngine->RegisterGlobalFunction("void print(const string &in)", AngelScript::asFUNCTION(Print), AngelScript::asCALL_CDECL);
+	m_asEngine->RegisterGlobalFunction("void Break()", AngelScript::asFUNCTION(Break), AngelScript::asCALL_CDECL);
+	m_asEngine->SetEngineProperty(asEP_USE_CHARACTER_LITERALS, true); //to have '' mean a single char
 	if_math::LoadMathInterface(m_asEngine);
 	if_render::LoadRenderInterface(m_asEngine);
 	if_input::LoadInputInterface(m_asEngine);
 	if_animation::LoadAnimationInterface(m_asEngine);
 	if_entity::LoadEntityInterface(m_asEngine);
 	Components::LoadComponentInterface(m_asEngine);
-
+	srand(time(0));
 	asIScriptContext* m_asContext = m_asEngine->CreateContext();
 	//Create window
 	sf::RenderWindow window(sf::VideoMode(1600, 900), "AngelGame(Running)");
-
 	bool paused = false;
 	if_render::SetWindow(&window);
 	Console::Init(m_asEngine, m_asContext);
 	ImGui::SFML::Init(window);
 	// Create Physics
 	PhysicsManager::GetInstance().Init();
+	//Export interface to file
+	m_asEngine->SetDefaultNamespace("Smug2D");
+	AngelScriptExporter::ExportEngineAsJSON("interface.json", m_asEngine);
+	
+	ASDebugger debugger;
+	debugger.Start(9002);
+	debugger.SetContext(m_asContext);
 	//call init
 	bool loadSuccess = LoadScript(m_asEngine, m_asContext, false);
 	while(!loadSuccess) {
@@ -113,7 +150,16 @@ int main(int argc, char** argv) {
 	}
 	r = m_asContext->Prepare(m_InitFunc);
 	r = m_asContext->Execute();
+	if (r > 0) {
+		printf("Exception! %s\n", m_asContext->GetExceptionString());
+		int column;
+		const char* fileName;
+		int line = m_asContext->GetExceptionLineNumber(&column, &fileName);
+		printf("File:%s(%d)\n",fileName, line);
+		DebugBreak();
+	}
 
+	bool imguiOpen = false;
 	sf::Clock clock;
 	while (window.isOpen()) {
 		sf::Event event;
@@ -142,37 +188,50 @@ int main(int argc, char** argv) {
 						window.setTitle("AngelGame(Running)");
 					}
 				}
+				if (event.key.code == sf::Keyboard::Tab) {
+					imguiOpen = !imguiOpen;
+				}
+				if (event.key.code == sf::Keyboard::Escape) {
+					window.close();
+				}
 			}
 		}
 
 		//call update
 		sf::Time deltaTime = clock.restart();
-		ImGui::SFML::Update(window, deltaTime);
+		if (imguiOpen) {
+			ImGui::SFML::Update(window, deltaTime);
+		} else {
+			ImGui::NewFrame();
+		}
 		float dt = deltaTime.asSeconds();
 		
-		
-
 		SpriteAnimation::Update(dt);// update all animation components
-		if (!paused) {
+		if (!paused && !debugger.IsSuspended()) {
 			r = m_asContext->Prepare(m_UpdateFunc);
 			r = m_asContext->SetArgFloat(0, dt);
 			r = m_asContext->Execute();
-			//call render
+		}
+		window.clear();
+		if (!paused && !debugger.IsSuspended()) {
 			r = m_asContext->Prepare(m_RenderFunc);
 			r = m_asContext->Execute();
 
 			if_render::Render();
 		}
 
-		ImGui::ShowDemoWindow();
-
 		Console::Render(&window, dt);
-
-		ImGui::SFML::Render();
-		window.resetGLStates();
-
+		if (imguiOpen) {
+			ImGui::SFML::Render();
+			window.resetGLStates();
+		}
+		else {
+			ImGui::EndFrame();
+		}
+		debugger.Update();
 		if_input::Update(&window);
 		window.display();
+		
 	}
 	return 0;
 }

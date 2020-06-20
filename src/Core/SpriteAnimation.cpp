@@ -183,14 +183,14 @@ namespace SpriteAnimation {
 		
 		auto& animation = m_Animations.find(handle);
 		if (animation != m_Animations.end()) {
-			uint32_t handle = m_InstanceNumerator++;
-			SpriteAnimationInstance& instance = m_AnimationInstances[handle];
+			uint32_t instanceHandle = m_InstanceNumerator++;
+			SpriteAnimationInstance& instance = m_AnimationInstances[instanceHandle];
 			instance.animationIndex = index;
 			assert(animation->second.animations.size() > index);
-			instance.handle = handle;
+			instance.handle = instanceHandle;
 			instance.time = 0;
 			instance.nodes.insert(instance.nodes.begin(), animation->second.nodes.begin(), animation->second.nodes.end());
-			return handle;
+			return instanceHandle;
 		}
 		return -1;
 	}

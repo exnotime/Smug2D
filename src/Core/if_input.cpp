@@ -3,6 +3,7 @@
 #include <SFML/Window.hpp>
 #include "if_math.h"
 #include "Camera.h"
+#include <SFML/Graphics.hpp>
 
 using namespace AngelScript;
 
@@ -44,6 +45,20 @@ bool IsMouseButtonReleased(sf::Mouse::Button button) {
 Vec2 MousePos() {
 	sf::Vector2i p = sf::Mouse::getPosition(*g_State.window);
 	return Vec2(p.x, p.y);
+}
+
+Vec2 MousePosCam(const Camera& cam) {
+	sf::Vector2i p = sf::Mouse::getPosition(*g_State.window);
+	sf::Vector2u windowSize = g_State.window->getSize();
+	Vec2 posNorm = Vec2(p.x / (float)windowSize.x, p.y / (float)windowSize.y);
+	if (posNorm.x < cam.viewport.x || posNorm.y < cam.viewport.y || posNorm.x > (cam.viewport.x + cam.viewport.w) || posNorm.y > (cam.viewport.y + cam.viewport.h)) {
+		return Vec2(-1, -1); //outside of viewport
+	}
+	posNorm.x = posNorm.x - cam.viewport.x;
+	posNorm.y = posNorm.y - cam.viewport.y;
+	posNorm.x = cam.position.x + cam.size.x * posNorm.x;
+	posNorm.y = cam.position.y + cam.size.y * posNorm.y;
+	return Vec2(posNorm.x, posNorm.y);
 }
 
 namespace if_input {
@@ -164,6 +179,7 @@ namespace if_input {
 		engine->RegisterGlobalFunction("bool IsMouseButtonReleased(MouseButton mb)", asFUNCTION(IsMouseButtonReleased), asCALL_CDECL);
 
 		engine->RegisterGlobalFunction("Vec2 MousePos()", asFUNCTION(MousePos), asCALL_CDECL);
+		engine->RegisterGlobalFunction("Vec2 MousePos(const Camera cam)", asFUNCTION(MousePosCam), asCALL_CDECL);
 
 		memset(&g_State.keyState, 0x0, sizeof(bool) * sf::Keyboard::KeyCount);
 		memset(&g_State.mouseButtonState, 0x0, sizeof(bool)* sf::Mouse::Button::ButtonCount);

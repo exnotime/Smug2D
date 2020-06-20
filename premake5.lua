@@ -37,9 +37,9 @@ solution "Smug2D"
         staticruntime "On" 
         links { "Box2D" }
         configuration { "Debug" }
-                links { "angelscript64d", "sfml-main-d", "sfml-system-d", "sfml-graphics-d", "sfml-window-d","OpenGL32" }
+                links { "angelscript64d", "sfml-main-d", "sfml-system-d", "sfml-graphics-d", "sfml-window-d","OpenGL32", "Ws2_32" }
         configuration { "Release" }
-                links { "angelscript64", "sfml-main", "sfml-system", "sfml-graphics", "sfml-window", "OpenGL32" }
+                links { "angelscript64", "sfml-main", "sfml-system", "sfml-graphics", "sfml-window", "OpenGL32", "Ws2_32" }
 
     project "Box2D"
         targetname "Box2D"

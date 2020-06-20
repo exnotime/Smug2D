@@ -2,9 +2,13 @@
 #include "ComponentManager.h"
 #include "EntityManager.h"
 #include <angelscript.h>
+#include "AngelScript/scripthandle/scripthandle.h"
+#include <map>
 using namespace AngelScript;
 namespace Components {
 
+
+	std::map<uint64_t, int> m_ComponentTypeToScriptType;
 
 	void CreateTransformComponentFull(uint32_t uid, Vec2 pos, Vec2 scale, Vec2 localOrigin, float rotation) {
 		TransformComponent tc;
@@ -65,6 +69,7 @@ namespace Components {
 		Entity& e = EntityManager::GetInstance().GetEntity(uid);
 		return (AnimationComponent*)ComponentManager::GetInstance().GetComponent(e, ComponentType::ANIMATION);
 	}
+
 
 	void LoadComponentInterface(asIScriptEngine* engine) {
 		ComponentManager& cm = ComponentManager::GetInstance();

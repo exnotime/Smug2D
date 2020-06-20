@@ -9,11 +9,9 @@
 #include "Components.h"
 #include "ComponentManager.h"
 #include "Camera.h"
+#include <algorithm>
 
 using namespace AngelScript;
-sf::RenderWindow* g_Window = nullptr;
-std::vector<Sprite*> g_Sprites;
-std::vector<Sprite> g_ImmediateSprites;
 
 #define DEFAULT_LAYER 3
 uint32_t g_SpriteId = 0;
@@ -27,8 +25,19 @@ struct Text {
 	int layer;
 };
 
+struct CircleShape {
+	Vec2 position;
+	sf::Color color;
+	float radius;
+	int layer;
+};
+
+sf::RenderWindow* g_Window = nullptr;
+std::vector<Sprite*> g_Sprites;
+std::vector<Sprite> g_ImmediateSprites;
 std::vector<Camera> g_Cameras;
 std::vector<Text> g_ImmediateTexts;
+std::vector<CircleShape> g_ImmediateCircles;
 
 void SortSprites() {
 	std::sort(g_Sprites.begin(), g_Sprites.end(), [](const Sprite* s1, const Sprite* s2) -> bool { return s1->layer < s2->layer; });
@@ -114,6 +123,15 @@ void DrawText(sf::Font* font, const std::string& string, const Vec2 position, co
 	g_ImmediateTexts.push_back(text);
 }
 
+void DrawCircle(Vec2 position, sf::Color color, float radius, int layer) {
+	CircleShape cs;
+	cs.position = position;
+	cs.color = color;
+	cs.radius = radius;
+	cs.layer = layer;
+	g_ImmediateCircles.push_back(cs);
+}
+
 void SetVsync(bool v) {
 	g_Window->setVerticalSyncEnabled(v);
 }
@@ -130,13 +148,47 @@ void AddCamera(Camera& c) {
 	g_Cameras.push_back(c);
 }
 
+sf::RenderTexture* CreateRenderTexture(const std::string name, Vec2 size) {
+	return TextureManager::GetInstance().CreateRenderTexture(name, size.x, size.y);
+}
+
+void ClearRenderTexture(sf::RenderTexture* target, const sf::Color c) {
+	target->clear(c);
+}
+
+void DrawSpriteToTexture(sf::RenderTexture* target, sf::Texture* tex, Vec2 position, Vec2 scale, Vec2 texpos, Vec2 texSize) {
+	sf::Sprite spr = sf::Sprite();
+	spr.setTexture(*tex);
+	spr.setPosition(position.x, position.y);
+	spr.setScale(scale.x, scale.y);
+	spr.setTextureRect(sf::IntRect(texpos.x, texpos.y, texSize.x, texSize.y));
+	target->draw(spr);
+}
+
+void DrawRectToTexture(sf::RenderTexture* target, Vec2 position, Vec2 size, sf::Color color) {
+	sf::RectangleShape rect;
+	rect.setFillColor(color);
+	rect.setPosition(position.x, position.y);
+	rect.setSize(sf::Vector2f(size.x, size.y));
+	target->draw(rect);
+}
+
+void FlushRenderTexture(sf::RenderTexture* target) {
+	target->display();
+}
+
+const sf::Texture* GetTextureFromRenderTexture(sf::RenderTexture* tex) {
+	return &tex->getTexture();
+}
+
 void if_render::LoadRenderInterface(AngelScript::asIScriptEngine* engine) {
+	int r = 0;
 	engine->RegisterGlobalFunction("void ClearWindow(int r, int g, int b)", asFUNCTION(ClearWindow), asCALL_CDECL);
 	engine->RegisterObjectType("Texture", sizeof(sf::Texture*), asOBJ_REF | asOBJ_NOCOUNT);
 	engine->RegisterGlobalFunction("Texture@ LoadTexture(const string)", asFUNCTION(LoadTexture), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void UnloadTexture(Texture@ tex)", asFUNCTION(UnloadTexture), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void DrawSprite(const Texture@ tex, const Vec2 pos, const Vec2 scale, const int layer = 3)", asFUNCTION(DrawSprite), asCALL_CDECL);
-	engine->RegisterObjectType("Color", sizeof(sf::Color), asOBJ_POD | asOBJ_VALUE);
+	engine->RegisterObjectType("Color", sizeof(sf::Color), asOBJ_POD | asOBJ_VALUE | asGetTypeTraits<sf::Color>());
 	engine->RegisterObjectProperty("Color", "uint8 r", asOFFSET(sf::Color, r));
 	engine->RegisterObjectProperty("Color", "uint8 g", asOFFSET(sf::Color, g));
 	engine->RegisterObjectProperty("Color", "uint8 b", asOFFSET(sf::Color, b));
@@ -157,6 +209,7 @@ void if_render::LoadRenderInterface(AngelScript::asIScriptEngine* engine) {
 	engine->RegisterGlobalFunction("Font@ LoadFont(const string filename)", asFUNCTION(LoadFont), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void UnloadFont(Font@ font)", asFUNCTION(UnloadFont), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void DrawText(Font@ font, const string str, const Vec2 pos, const Color c, const int charSize = 30, const int layer = 2)", asFUNCTION(DrawText), asCALL_CDECL);
+	engine->RegisterGlobalFunction("void DrawCircle(Vec2 position, Color color, float radius, int layer = 3)", asFUNCTION(DrawCircle), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void SetVsync(bool v)", asFUNCTION(SetVsync), asCALL_CDECL);
 	engine->RegisterObjectType("Camera", sizeof(Camera), asOBJ_POD | asOBJ_VALUE | asGetTypeTraits<Camera>());
 	engine->RegisterObjectProperty("Camera", "Vec2 position", asOFFSET(Camera, position));
@@ -165,6 +218,13 @@ void if_render::LoadRenderInterface(AngelScript::asIScriptEngine* engine) {
 	engine->RegisterObjectProperty("Camera", "Rect viewport", asOFFSET(Camera, viewport));
 	engine->RegisterGlobalFunction("void AddCamera(Camera c)", asFUNCTION(AddCamera), asCALL_CDECL);
 
+	r = engine->RegisterObjectType("RenderTexture", sizeof(sf::RenderTexture*), asOBJ_REF | asOBJ_NOCOUNT);
+	r = engine->RegisterGlobalFunction("RenderTexture@ CreateRenderTexture(const string name, Vec2 size)", asFUNCTION(CreateRenderTexture), asCALL_CDECL);
+	r = engine->RegisterGlobalFunction("void ClearRenderTexture(RenderTexture@ target, const Color c)", asFUNCTION(ClearRenderTexture), asCALL_CDECL);
+	r = engine->RegisterGlobalFunction("void FlushRenderTexture(RenderTexture@ target)", asFUNCTION(FlushRenderTexture), asCALL_CDECL);
+	r = engine->RegisterGlobalFunction("void DrawSpriteToTexture(RenderTexture@ target, Texture@ spriteTex, Vec2 position, Vec2 scale, Vec2 texPos, Vec2 texSize)", asFUNCTION(DrawSpriteToTexture), asCALL_CDECL);
+	r = engine->RegisterGlobalFunction("void DrawRectToTexture(RenderTexture@ target, Vec2 position, Vec2 size, const Color c)", asFUNCTION(DrawRectToTexture), asCALL_CDECL);
+	r = engine->RegisterGlobalFunction("const Texture@ GetTextureFromRenderTexture(RenderTexture@ target)", asFUNCTION(GetTextureFromRenderTexture), asCALL_CDECL);
 }
 
 void if_render::SetWindow(sf::RenderWindow* window) {
@@ -217,9 +277,9 @@ void if_render::Render() {
 			g_ImmediateSprites.push_back(spr);
 		}
 	}
-
-	std::sort(g_ImmediateTexts.begin(), g_ImmediateTexts.end(), [](const Text& t1, const Text& t2) ->bool {return t1.layer < t2.layer; });
-	std::sort(g_ImmediateSprites.begin(), g_ImmediateSprites.end(), [](const Sprite& s1, const Sprite& s2) ->bool {return s1.layer < s2.layer; });
+	std::sort(g_ImmediateTexts.begin(), g_ImmediateTexts.end(), [](const Text& t1, const Text& t2) ->bool { return t1.layer < t2.layer; });
+	std::sort(g_ImmediateSprites.begin(), g_ImmediateSprites.end(), [](const Sprite& s1, const Sprite& s2) ->bool { return s1.layer < s2.layer; });
+	std::sort(g_ImmediateCircles.begin(), g_ImmediateCircles.end(), [](const CircleShape& s1, const CircleShape& s2) ->bool { return s1.layer < s2.layer; });
 
 	for (auto& camera : g_Cameras) {
 		sf::View view;
@@ -232,7 +292,8 @@ void if_render::Render() {
 		int currentSprite = 0;
 		int currentImmSprite = 0;
 		int currentImmText = 0;
-		for (uint32_t l = 0; l < 128; ++l) {
+		int currentCircle = 0;
+		for (uint32_t l = 0; l < 10 + 1; ++l) {
 			for (int i = currentSprite; i < g_Sprites.size(); ++i, currentSprite++) {
 				if (g_Sprites[i]->layer <= l) {
 					DrawSpriteToWindow(g_Sprites[i]);
@@ -257,10 +318,24 @@ void if_render::Render() {
 					break;
 				}
 			}
+			for (int i = currentCircle; i < g_ImmediateCircles.size(); ++i, currentCircle++) {
+				if (g_ImmediateCircles[i].layer <= l) {
+					const CircleShape& cs = g_ImmediateCircles[i];
+					sf::CircleShape circle;
+					circle.setFillColor(cs.color);
+					circle.setPosition(cs.position.x, cs.position.y);
+					circle.setRadius(cs.radius);
+					g_Window->draw(circle);
+				}
+				else {
+					break;
+				}
+			}
 		}
 	}
 	g_Cameras.clear();
 	g_ImmediateTexts.clear();
 	g_ImmediateSprites.clear();
+	g_ImmediateCircles.clear();
 	
 }

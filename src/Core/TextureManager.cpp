@@ -41,6 +41,18 @@ sf::Texture* TextureManager::LoadTexture(const std::string& filename)
 	}
 }
 
+sf::RenderTexture* TextureManager::CreateRenderTexture(const std::string& name, float width, float height) {
+	auto& texIt = m_RenderTextureMap.find(name);
+	if (texIt == m_RenderTextureMap.end()) {
+		sf::RenderTexture& tex = m_RenderTextureMap[name];
+		tex.create(width, height);
+		return &tex;
+	}
+	else {
+		return &texIt->second;
+	}
+}
+
 void TextureManager::UnloadTexture()
 {
 	//m_TextureMap.erase(texture.filename);

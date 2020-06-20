@@ -2,7 +2,7 @@
 #include <intrin.h>
 
 ComponentManager::ComponentManager() {
-
+	m_ComponentTypeCount = 0;
 }
 
 ComponentManager::~ComponentManager() {
@@ -22,6 +22,7 @@ ComponentManager& ComponentManager::GetInstance() {
 
 void ComponentManager::AddComponentType(uint32_t maxCount, uint32_t size, uint64_t componentID, const char* name) {
 	CreateComponentBuffer(maxCount, size, componentID, name);
+	m_ComponentTypeCount++;
 }
 
 void ComponentManager::CreateComponent(const void* comp, Entity& ent, uint64_t type) {

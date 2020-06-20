@@ -12,6 +12,7 @@ class ComponentManager {
 	void RemoveComponents(Entity& ent);
 	int GetBuffer(void** outBuffer, uint64_t type);
 	void* GetComponent(const Entity& ent, uint64_t type);
+	int GetComponentTypeCount() const { return m_ComponentTypeCount; }
   private:
 	  ComponentManager();
 	  ~ComponentManager();
