@@ -20,6 +20,7 @@ namespace SpriteAnimation {
 
 	Transform ParseTransform(const rapidjson::Value& val) {
 		Transform t;
+		memset(&t, 0x0, sizeof(Transform));
 		if (val.IsObject()) {
 			if (val.HasMember("position")) {
 				const auto& pos = val["position"];
@@ -36,8 +37,8 @@ namespace SpriteAnimation {
 			}
 			if (val.HasMember("scale")) {
 				const auto& scale = val["scale"];
-				t.Scale.x = scale[0].GetFloat();
-				t.Scale.y = scale[1].GetFloat();
+				t.scale.x = scale[0].GetFloat();
+				t.scale.y = scale[1].GetFloat();
 			}
 		}
 		return t;
@@ -167,17 +168,27 @@ namespace SpriteAnimation {
 					sa.nodeKeys[key.nodeIndex].push_back(key);
 				}
 				//sort keys based on time
-				for (auto& keys : sa.nodeKeys) {
+				/*for (auto& keys : sa.nodeKeys) {
 					std::sort(keys.second.begin(), keys.second.end(), [](const AnimationKey& k1, const AnimationKey& k2) -> bool {
 						return k1.time < k2.time;
 					});
-				}
+				}*/
 				m_Animations[h] = sa;
 			}
 			fclose(fin);
 		}
 		return h;
 	}
+
+
+	SpriteAnimationResource* GetAnimation(AnimationHandle handle) {
+		auto& it = m_Animations.find(handle);
+		if (it == m_Animations.end()) {
+			return nullptr;
+		}
+		return &it->second;
+	}
+
 
 	uint32_t InstansiateAnimation(AnimationHandle handle, uint32_t index) {
 		
@@ -218,8 +229,16 @@ namespace SpriteAnimation {
 				sf::Vector2u texSize = sc->texture->getSize();
 				sc->textureSize = Vec2(texSize.x, texSize.y);
 				sc->textureRect = resource.frames[node.frame];
+
+				if (e.ComponentBitfield & ComponentType::TRANSFORM) {
+					TransformComponent* tc = (TransformComponent*)cm.GetComponent(e, ComponentType::TRANSFORM);
+				}
 			}
 		}
+	}
+
+	SpriteAnimationInstance& GetInstance(uint32_t handle) {
+		return m_AnimationInstances[handle];
 	}
 
 	void SampleAnimation(float time, SpriteAnimationInstance& instance) {
@@ -229,11 +248,12 @@ namespace SpriteAnimation {
 			instance.time = fmodf(time, anim.duration);
 			for (uint32_t nodeIndex = 0; nodeIndex < instance.nodes.size(); ++nodeIndex) {
 				auto& keys =  animation->second.nodeKeys[nodeIndex];
-				for (uint32_t keyIndex = 0; keyIndex < keys.size(); ++keyIndex) {
-					if (keys[keyIndex].time > instance.time) {
+				for (int32_t keyIndex = 0; keyIndex < anim.keys.size(); ++keyIndex) {
+					if (keys[anim.keys[keyIndex]].time > instance.time) {
 						//lerp between next and last key based on blendmode
 						auto& node = instance.nodes[nodeIndex];
-						auto& lastKey = keys[keyIndex - 1];
+						int32_t lastKeyIndex = std::max(0, keyIndex - 1);
+						auto& lastKey = keys[anim.keys[lastKeyIndex]];
 						//TODO: atm only support frame animation
 						if (lastKey.type == KeyType::Frame) {
 							node.frame = lastKey.index;
@@ -252,10 +272,9 @@ namespace SpriteAnimation {
 			for (auto& node : instance.nodes) {
 				sf::Sprite spr;
 				spr.setTexture(*animation->second.textures[node.texture]);
-				spr.setPosition(50, 50);
 				Rect r = animation->second.frames[node.frame];
 				spr.setTextureRect(sf::IntRect(r.x, r.y, r.w, r.h));
-				spr.setScale(3, 3);
+				spr.setScale(node.transform.scale.x, node.transform.scale.y);
 				window->draw(spr);
 			}
 		}

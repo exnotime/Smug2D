@@ -58,6 +58,20 @@ void ExceptionCallback() {
 
 }
 
+struct ProgramArguments {
+	bool WaitForDebugger = false;
+};
+
+ProgramArguments ParseProgramArgs(int argc, char** argv) {
+	ProgramArguments args;
+	for (int i = 0; i < argc; ++i) {
+		if (strcmp(argv[i], "--wait-for-debugger") == 0) {
+			args.WaitForDebugger = true;
+		}
+	}
+	return args;
+}
+
 asIScriptFunction* m_InitFunc;
 asIScriptFunction* m_UpdateFunc;
 asIScriptFunction* m_RenderFunc;
@@ -103,6 +117,8 @@ bool TestCompileScript(asIScriptEngine* engine) {
 }
 
 int main(int argc, char** argv) {
+	ProgramArguments args = ParseProgramArgs(argc, argv);
+
 	//init angelscript engine
 	asIScriptEngine* m_asEngine = asCreateScriptEngine();
 	int r = m_asEngine->SetMessageCallback(asFUNCTION(MessageCallback), 0, asCALL_CDECL);
@@ -141,6 +157,23 @@ int main(int argc, char** argv) {
 	ASDebugger debugger;
 	debugger.Start(9002);
 	debugger.SetContext(m_asContext);
+
+	sf::Clock debugTimer;
+	const float timeout = 10.0f;
+	if (args.WaitForDebugger) {
+		while (debugTimer.getElapsedTime().asSeconds() < timeout) {
+			sf::Event event;
+			while (window.pollEvent(event)) {};
+			window.clear();
+			window.display();
+			debugger.Update();
+			//wait until we have a connection and have received all pre-set breakpoints
+			if (debugger.IsConnected() && debugger.IsSetup()) {
+				break;
+			}
+		}
+	}
+
 	//call init
 	bool loadSuccess = LoadScript(m_asEngine, m_asContext, false);
 	while(!loadSuccess) {
@@ -150,7 +183,18 @@ int main(int argc, char** argv) {
 	}
 	r = m_asContext->Prepare(m_InitFunc);
 	r = m_asContext->Execute();
-	if (r > 0) {
+	//if we hit a breakpoint during init we need to wait for the user to finish
+	while (debugger.IsSuspended()){
+		sf::Event event;
+		while (window.pollEvent(event)) {};
+		window.clear();
+		window.display();
+		debugger.Update();
+	}
+	if (r == asEXECUTION_SUSPENDED) {
+		m_asContext->Execute();
+	}
+	if (r == asEXECUTION_EXCEPTION) {
 		printf("Exception! %s\n", m_asContext->GetExceptionString());
 		int column;
 		const char* fileName;

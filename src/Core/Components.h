@@ -23,6 +23,8 @@ struct SpriteComponent {
 	Vec2 textureSize;
 	sf::Color tint;
 	uint32_t layer;
+	bool flipX = false;
+	bool flipY = false;
 };
 
 struct PhysicsComponent {

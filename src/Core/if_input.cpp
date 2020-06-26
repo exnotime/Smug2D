@@ -179,7 +179,7 @@ namespace if_input {
 		engine->RegisterGlobalFunction("bool IsMouseButtonReleased(MouseButton mb)", asFUNCTION(IsMouseButtonReleased), asCALL_CDECL);
 
 		engine->RegisterGlobalFunction("Vec2 MousePos()", asFUNCTION(MousePos), asCALL_CDECL);
-		engine->RegisterGlobalFunction("Vec2 MousePos(const Camera cam)", asFUNCTION(MousePosCam), asCALL_CDECL);
+		engine->RegisterGlobalFunction("Vec2 MousePos(const Camera@ cam)", asFUNCTION(MousePosCam), asCALL_CDECL);
 
 		memset(&g_State.keyState, 0x0, sizeof(bool) * sf::Keyboard::KeyCount);
 		memset(&g_State.mouseButtonState, 0x0, sizeof(bool)* sf::Mouse::Button::ButtonCount);

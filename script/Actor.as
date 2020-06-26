@@ -28,9 +28,15 @@ class PlayerActor : Actor{
         Actor();
         CreateTransformComponent(m_Entity, Vec2(4 * 64), Vec2(1), Vec2(0), 0);
         CreateSpriteComponent(m_Entity, LoadTexture("assets/textures/player.png"), 3, Rect(0,0,1,1), Color(255,255,255));
+        AnimationHandle playerAnimation = LoadAnimation("assets/sprites/player.sprite");
+        CreateAnimationComponent(m_Entity, playerAnimation);
         m_MaxActionPoints = 4;
         m_ActionPoints = 4;
         m_GridPosition = Vec2(4);
+
+        walkingRightAnimation = GetAnimationIndex(playerAnimation, "WalkingRight");
+        walkingUpAnimation = GetAnimationIndex(playerAnimation, "WalkingUp");
+        walkingDownAnimation = GetAnimationIndex(playerAnimation, "WalkingDown");
     }
 
     void Update(EventStream@ es){
@@ -42,6 +48,10 @@ class PlayerActor : Actor{
             @me.actor = @this;
             es.PushNewEvent(me);
             m_ActionPoints--;
+            SpriteComponent@ sc = GetSpriteComponent(m_Entity);
+            sc.flipX = true;
+            AnimationComponent@ ac = GetAnimationComponent(m_Entity);
+            PlayAnimation(ac, walkingRightAnimation);
         } else if(IsKeyPushed(Key::Right)){
             MovementEvent me;
             me.from = m_GridPosition;
@@ -49,6 +59,10 @@ class PlayerActor : Actor{
             @me.actor = @this;
             es.PushNewEvent(me);
             m_ActionPoints--;
+            SpriteComponent@ sc = GetSpriteComponent(m_Entity);
+            sc.flipX = false;
+            AnimationComponent@ ac = GetAnimationComponent(m_Entity);
+            PlayAnimation(ac, walkingRightAnimation);
         } else if(IsKeyPushed(Key::Up)){
             MovementEvent me;
             me.from = m_GridPosition;
@@ -56,6 +70,8 @@ class PlayerActor : Actor{
             @me.actor = @this;
             es.PushNewEvent(me);
             m_ActionPoints--;
+            AnimationComponent@ ac = GetAnimationComponent(m_Entity);
+            PlayAnimation(ac, walkingUpAnimation);
         } else if(IsKeyPushed(Key::Down)){
             MovementEvent me;
             me.from = m_GridPosition;
@@ -63,9 +79,15 @@ class PlayerActor : Actor{
             @me.actor = @this;
             es.PushNewEvent(me);
             m_ActionPoints--;
+            AnimationComponent@ ac = GetAnimationComponent(m_Entity);
+            PlayAnimation(ac, walkingDownAnimation);
         }
+    }
 
-        
+    void SetGridPos(uint x, uint y){
+        TransformComponent@ tc = GetTransformComponent(m_Entity);
+        tc.position = Vec2(x,y) * 64;
+        m_GridPosition = Vec2(x,y);
     }
 
     void Render(){
@@ -86,4 +108,9 @@ class PlayerActor : Actor{
     void Reset(){
         m_ActionPoints = m_MaxActionPoints;
     }
+
+    private int walkingRightAnimation;
+    private int walkingDownAnimation;
+    private int walkingUpAnimation;
+
 }

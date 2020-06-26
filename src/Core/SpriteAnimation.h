@@ -11,7 +11,7 @@ namespace SpriteAnimation {
 
 	struct  Transform{
 		Vec2 position;
-		Vec2 Scale;
+		Vec2 scale;
 		Vec2 localOrigin;
 		float rotation;
 		float padding;
@@ -74,13 +74,17 @@ namespace SpriteAnimation {
 		uint32_t animationIndex = 0;
 		float time = 0; //last sampled time
 		std::vector<Node> nodes;
+		bool looping = true; //Should be part of the animation file weather or not the animation supports looping
+		bool paused = false;
 	};
 
 	
 	AnimationHandle Load(const char* filename);
+	SpriteAnimationResource* GetAnimation(AnimationHandle handle);
 	uint32_t InstansiateAnimation(AnimationHandle handle, uint32_t index = 0);
 	void Update(float dt);
 	void SampleAnimation(float time, SpriteAnimationInstance& instance);
+	SpriteAnimationInstance& GetInstance(uint32_t handle);
 	//temp
 	void RenderAnimatedSprite(sf::RenderWindow* window, SpriteAnimationInstance& instance);
 

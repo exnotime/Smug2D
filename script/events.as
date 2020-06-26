@@ -25,6 +25,8 @@ class MovementEvent : Event {
             actor.m_GridPosition = to;
             TransformComponent@ tc = GetTransformComponent(actor.m_Entity);
             tc.position = to * 64;
+
+            g_Globals.camera.position += (to - from) * 64;
         }
     }
 }

@@ -11,6 +11,8 @@ struct Sprite {
 	uint32_t layer;
 	float rotation;
 	Vec2 localOrigin;
+	bool flipX = false;
+	bool flipY = false;
 	//internal engine stuff
 	uint32_t id;
 };

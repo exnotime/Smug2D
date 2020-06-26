@@ -148,6 +148,10 @@ void AddCamera(Camera& c) {
 	g_Cameras.push_back(c);
 }
 
+Camera* ConstructCamera() {
+	return new Camera();
+}
+
 sf::RenderTexture* CreateRenderTexture(const std::string name, Vec2 size) {
 	return TextureManager::GetInstance().CreateRenderTexture(name, size.x, size.y);
 }
@@ -171,6 +175,16 @@ void DrawRectToTexture(sf::RenderTexture* target, Vec2 position, Vec2 size, sf::
 	rect.setPosition(position.x, position.y);
 	rect.setSize(sf::Vector2f(size.x, size.y));
 	target->draw(rect);
+}
+
+void DrawTextToTexture(sf::RenderTexture* target, sf::Font* font, Vec2 position, std::string& str, const int charSize, const sf::Color color) {
+	sf::Text text;
+	text.setCharacterSize(charSize);
+	text.setColor(color);
+	text.setFont(*font);
+	text.setPosition(position.x, position.y);
+	text.setString(str);
+	target->draw(text);
 }
 
 void FlushRenderTexture(sf::RenderTexture* target) {
@@ -203,6 +217,8 @@ void if_render::LoadRenderInterface(AngelScript::asIScriptEngine* engine) {
 	engine->RegisterObjectProperty("Sprite", "Vec2 textureSize", asOFFSET(Sprite, textureSize));
 	engine->RegisterObjectProperty("Sprite", "Color tint", asOFFSET(Sprite, tint));
 	engine->RegisterObjectProperty("Sprite", "uint layer", asOFFSET(Sprite, layer));
+	engine->RegisterObjectProperty("Sprite", "bool flipX", asOFFSET(Sprite, flipX));
+	engine->RegisterObjectProperty("Sprite", "bool flipY", asOFFSET(Sprite, flipY));
 	engine->RegisterGlobalFunction("Sprite@ CreateSprite(Texture@ tex, const Vec2 pos)", asFUNCTION(CreateSprite), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void DestroySprite(Sprite@ spr)", asFUNCTION(DestroySprite), asCALL_CDECL);
 	engine->RegisterObjectType("Font", sizeof(sf::Font*), asOBJ_REF | asOBJ_NOCOUNT);
@@ -211,12 +227,16 @@ void if_render::LoadRenderInterface(AngelScript::asIScriptEngine* engine) {
 	engine->RegisterGlobalFunction("void DrawText(Font@ font, const string str, const Vec2 pos, const Color c, const int charSize = 30, const int layer = 2)", asFUNCTION(DrawText), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void DrawCircle(Vec2 position, Color color, float radius, int layer = 3)", asFUNCTION(DrawCircle), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void SetVsync(bool v)", asFUNCTION(SetVsync), asCALL_CDECL);
-	engine->RegisterObjectType("Camera", sizeof(Camera), asOBJ_POD | asOBJ_VALUE | asGetTypeTraits<Camera>());
-	engine->RegisterObjectProperty("Camera", "Vec2 position", asOFFSET(Camera, position));
-	engine->RegisterObjectProperty("Camera", "Vec2 size", asOFFSET(Camera, size));
-	engine->RegisterObjectProperty("Camera", "float rotation", asOFFSET(Camera, rotation));
-	engine->RegisterObjectProperty("Camera", "Rect viewport", asOFFSET(Camera, viewport));
-	engine->RegisterGlobalFunction("void AddCamera(Camera c)", asFUNCTION(AddCamera), asCALL_CDECL);
+	r = engine->RegisterObjectType("Camera", 0, asOBJ_REF);
+	r = engine->RegisterObjectBehaviour("Camera", asBEHAVE_FACTORY, "Camera@ f()", asFUNCTION(ConstructCamera), asCALL_CDECL);
+	r = engine->RegisterObjectBehaviour("Camera", asBEHAVE_ADDREF, "void f()", asMETHOD(Camera, Increment), asCALL_THISCALL);
+	r = engine->RegisterObjectBehaviour("Camera", asBEHAVE_RELEASE, "void f()", asMETHOD(Camera, Release), asCALL_THISCALL);
+	r = engine->RegisterObjectProperty("Camera", "Vec2 position", asOFFSET(Camera, position));
+	r = engine->RegisterObjectProperty("Camera", "Vec2 size", asOFFSET(Camera, size));
+	r = engine->RegisterObjectProperty("Camera", "float rotation", asOFFSET(Camera, rotation));
+	r = engine->RegisterObjectProperty("Camera", "Rect viewport", asOFFSET(Camera, viewport));
+	r = engine->RegisterGlobalFunction("void AddCamera(Camera@ c)", asFUNCTION(AddCamera), asCALL_CDECL);
+	
 
 	r = engine->RegisterObjectType("RenderTexture", sizeof(sf::RenderTexture*), asOBJ_REF | asOBJ_NOCOUNT);
 	r = engine->RegisterGlobalFunction("RenderTexture@ CreateRenderTexture(const string name, Vec2 size)", asFUNCTION(CreateRenderTexture), asCALL_CDECL);
@@ -224,6 +244,7 @@ void if_render::LoadRenderInterface(AngelScript::asIScriptEngine* engine) {
 	r = engine->RegisterGlobalFunction("void FlushRenderTexture(RenderTexture@ target)", asFUNCTION(FlushRenderTexture), asCALL_CDECL);
 	r = engine->RegisterGlobalFunction("void DrawSpriteToTexture(RenderTexture@ target, Texture@ spriteTex, Vec2 position, Vec2 scale, Vec2 texPos, Vec2 texSize)", asFUNCTION(DrawSpriteToTexture), asCALL_CDECL);
 	r = engine->RegisterGlobalFunction("void DrawRectToTexture(RenderTexture@ target, Vec2 position, Vec2 size, const Color c)", asFUNCTION(DrawRectToTexture), asCALL_CDECL);
+	r = engine->RegisterGlobalFunction("void DrawTextToTexture(RenderTexture@ target,Font@ font, Vec2 position, string str, const int charSize, const Color c)", asFUNCTION(DrawTextToTexture), asCALL_CDECL);
 	r = engine->RegisterGlobalFunction("const Texture@ GetTextureFromRenderTexture(RenderTexture@ target)", asFUNCTION(GetTextureFromRenderTexture), asCALL_CDECL);
 }
 
@@ -240,6 +261,19 @@ void DrawSpriteToWindow(const Sprite* s) {
 	spr.setScale(s->scale.x, s->scale.y);
 	spr.setRotation(s->rotation);
 	spr.setOrigin(s->localOrigin.x, s->localOrigin.y);
+	sf::Vector2f scale = spr.getScale();
+	sf::FloatRect localBounds = spr.getLocalBounds();
+	sf::Vector2f origin = spr.getOrigin();
+	if (s->flipX) {
+		origin.x = localBounds.width;
+		scale.x *= -1;
+	}
+	if (s->flipY) {
+		origin.y = localBounds.height;
+		scale.y *= -1;
+	}
+	spr.setOrigin(origin);
+	spr.setScale(scale);
 	g_Window->draw(spr);
 }
 
@@ -266,7 +300,7 @@ void if_render::Render() {
 			SpriteComponent* sc = (SpriteComponent*)cm.GetComponent(e, ComponentType::SPRITE);
 
 			Sprite spr;
-			spr.position = tc->position; // todo handle local origin
+			spr.position = tc->position; 
 			spr.layer = sc->layer;
 			spr.scale = tc->scale;
 			spr.texture = sc->texture;
@@ -274,6 +308,18 @@ void if_render::Render() {
 			spr.tint = sc->tint;
 			spr.localOrigin = tc->localOrigin;
 			spr.rotation = tc->rotation;
+			spr.flipX = sc->flipX;
+			spr.flipY = sc->flipY;
+
+			if (e.ComponentBitfield & ComponentType::ANIMATION) {
+				AnimationComponent* ac = (AnimationComponent*)cm.GetComponent(e, ComponentType::ANIMATION);
+				const SpriteAnimation::SpriteAnimationInstance& instance = SpriteAnimation::GetInstance(ac->instance);
+
+				spr.scale *= instance.nodes[0].transform.scale;
+				spr.position += instance.nodes[0].transform.position;
+				spr.localOrigin += instance.nodes[0].transform.localOrigin;
+			}
+
 			g_ImmediateSprites.push_back(spr);
 		}
 	}

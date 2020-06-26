@@ -2,7 +2,11 @@
 #include "level.as"
 
 class Globals{
+    Globals(){
+        @this.camera = Camera();
+    }
     Level@ currentLevel;
+    Camera@ camera;
 };
 
 Globals g_Globals;

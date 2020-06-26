@@ -70,6 +70,27 @@ namespace Components {
 		return (AnimationComponent*)ComponentManager::GetInstance().GetComponent(e, ComponentType::ANIMATION);
 	}
 
+	float GetAnimationTime(const AnimationComponent* ac) {
+		const SpriteAnimation::SpriteAnimationInstance& instance = SpriteAnimation::GetInstance(ac->instance);
+		return instance.time;
+	}
+
+	void PlayAnimation(AnimationComponent* ac, int animationIndex, bool looping) {
+		if (animationIndex == -1) {
+			return;
+		}
+		SpriteAnimation::SpriteAnimationInstance& instance = SpriteAnimation::GetInstance(ac->instance);
+		instance.paused = false;
+		instance.looping = looping;
+		instance.time = 0.0f;
+		instance.animationIndex = animationIndex;
+	}
+
+	void PauseAnimation(AnimationComponent* ac) {
+		SpriteAnimation::SpriteAnimationInstance& instance = SpriteAnimation::GetInstance(ac->instance);
+		instance.paused = true;
+	}
+
 
 	void LoadComponentInterface(asIScriptEngine* engine) {
 		ComponentManager& cm = ComponentManager::GetInstance();
@@ -94,6 +115,8 @@ namespace Components {
 		engine->RegisterObjectProperty("SpriteComponent", "int layer", asOFFSET(SpriteComponent, layer));
 		engine->RegisterObjectProperty("SpriteComponent", "Rect textureRect", asOFFSET(SpriteComponent, textureRect));
 		engine->RegisterObjectProperty("SpriteComponent", "Color color", asOFFSET(SpriteComponent, tint));
+		engine->RegisterObjectProperty("SpriteComponent", "bool flipX", asOFFSET(SpriteComponent, flipX));
+		engine->RegisterObjectProperty("SpriteComponent", "bool flipY", asOFFSET(SpriteComponent, flipY));
 
 		engine->RegisterObjectType("AnimationComponent", sizeof(AnimationComponent), asOBJ_REF | asOBJ_NOCOUNT);
 
@@ -108,5 +131,9 @@ namespace Components {
 		engine->RegisterGlobalFunction("void CreateAnimationComponent(EntityHandle e, AnimationHandle handle, uint animationIndex = 0)", asFUNCTION(CreateAnimationComponentFull), asCALL_CDECL);
 		engine->RegisterGlobalFunction("void CreateAnimationComponent(EntityHandle e)", asFUNCTION(CreateAnimationComponent), asCALL_CDECL);
 		engine->RegisterGlobalFunction("AnimationComponent@ GetAnimationComponent(EntityHandle e)", asFUNCTION(GetAnimationComponent), asCALL_CDECL);
+
+		engine->RegisterGlobalFunction("float GetAnimationTime(const AnimationComponent@ ac)", asFUNCTION(GetAnimationTime), asCALL_CDECL);
+		engine->RegisterGlobalFunction("void PlayAnimation(AnimationComponent@ ac, int animationIndex, bool looping = false)", asFUNCTION(PlayAnimation), asCALL_CDECL);
+		engine->RegisterGlobalFunction("void PauseAnimation(AnimationComponent@ ac)", asFUNCTION(PauseAnimation), asCALL_CDECL);
 	}
 }

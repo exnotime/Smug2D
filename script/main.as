@@ -5,9 +5,8 @@
 #include "events.as"
 #include "globals.as"
 
-Camera m_Camera;
+Camera@ m_Camera;
 PlayerActor m_Player;
-PlayerActor m_Player2;
 Level m_Level;
 StateMachine m_StateMachine;
 int m_PlayerTeam;
@@ -18,7 +17,7 @@ void init(){
     m_Level.Init();
     //editorInit();
     SetVsync(true);
-
+    @m_Camera = @g_Globals.camera;
     m_Camera.position = Vec2(0,0);
     m_Camera.size = Vec2(1600,900);
     m_Camera.viewport = Rect(0, 0, 1, 1);
@@ -27,11 +26,8 @@ void init(){
     m_PlayerTeam = m_StateMachine.CreateTeam();
     m_StateMachine.AddActorToTeam(m_PlayerTeam, m_Player);
 
-    m_Player2.m_GridPosition = Vec2(5,5);
-
-    m_EnemyTeam = m_StateMachine.CreateTeam();
-    m_StateMachine.AddActorToTeam(m_EnemyTeam, m_Player2);
-
+    m_Player.SetGridPos(m_Level.StartPos.x, m_Level.StartPos.y);
+    m_Camera.position = m_Level.StartPos * 64 - m_Camera.size  * 0.5f;
     @g_Globals.currentLevel = @m_Level;
 }
 
@@ -48,6 +44,9 @@ bool reload(){
 }
 
 float fps;
+float keyDownTimer = 0;
+float keyStepTimer = 0;
+Key downedKey;
 void update(float dt){
     fps = (1.0f/ dt);
     if(IsConsoleOpen())
@@ -66,6 +65,53 @@ void update(float dt){
     }
     if(IsKeyPushed(Key::S)){
         m_Camera.position.y += 64;
+    }
+    if(IsKeyPushed(Key::E)){
+        m_Camera.size.x += 20 * 16;
+        m_Camera.size.y += 20 * 9;
+    }
+    if(IsKeyPushed(Key::Q)){
+        m_Camera.size.x -= 20 * 16;
+        m_Camera.size.y -= 20 * 9;
+    }
+
+    if(IsKeyReleased(downedKey)){
+        keyDownTimer = 0;
+    }
+
+    if(IsKeyDown(Key::D)){
+        downedKey = Key::D;
+        keyDownTimer += dt;
+    }
+    if(IsKeyDown(Key::A)){
+        downedKey = Key::A;
+        keyDownTimer += dt;
+    }
+    if(IsKeyDown(Key::W)){
+        downedKey = Key::W;
+        keyDownTimer += dt;
+    }
+    if(IsKeyDown(Key::S)){
+        downedKey = Key::S;
+        keyDownTimer += dt;
+    }
+    if(keyDownTimer > 0.5f){
+        keyStepTimer += dt;
+    }
+    if(keyStepTimer > 0.1f){
+        keyStepTimer = 0;
+        if(downedKey == Key::D){
+            m_Camera.position.x += 64;
+        }
+        if(downedKey == Key::A){
+            m_Camera.position.x -= 64;
+        }
+        if(downedKey == Key::W){
+            m_Camera.position.y -= 64;
+        }
+        if(downedKey == Key::S){
+            m_Camera.position.y += 64;
+        }
     }
 }
 

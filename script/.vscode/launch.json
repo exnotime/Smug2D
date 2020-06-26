@@ -12,7 +12,7 @@
             "workingdir": "C:/Users/krunk/OneDrive/Desktop/Smug2D",
             "address": "localhost",
             "port": "9202",
-            "arguments": ""
+            "arguments": "--wait-for-debugger"
         }
     ]
 }
