@@ -8,8 +8,9 @@ enum EventType{
 
 class Event{
     EventType eventType;
-    void Perform(){
+    bool Perform(float dt){
         print("base perform");
+        return true;
     }
 };
 
@@ -18,16 +19,27 @@ class MovementEvent : Event {
     Vec2 from;
     Vec2 to;
     Actor@ actor;
-    
-    void Perform(){
-        print("moving from (" + from.x + "," + from.y+ ") to (" + to.x + "," + to.y + ")");
-        if(g_Globals.currentLevel.IsWalkable(to)){
-            actor.m_GridPosition = to;
-            TransformComponent@ tc = GetTransformComponent(actor.m_Entity);
-            tc.position = to * 64;
-
-            g_Globals.camera.position += (to - from) * 64;
+    float time = 0;
+    float timer = 0;
+    bool Perform(float dt){
+        //print("moving from (" + from.x + "," + from.y+ ") to (" + to.x + "," + to.y + ")");
+        if(!g_Globals.currentLevel.IsWalkable(to)){
+            return true;
         }
+        Vec2 delta = (to * 64) - (from * 64);
+        delta *= (timer / time);
+        TransformComponent@ tc = GetTransformComponent(actor.m_Entity);
+        tc.position = (from * 64) + delta;
+        if(timer >= time){
+            tc.position = to * 64;
+            g_Globals.camera.position += (to - from) * 64;
+            actor.m_GridPosition = to;
+            AnimationComponent@ ac = GetAnimationComponent(actor.m_Entity);
+            PauseAnimation(ac);
+            return true;
+        }
+        timer += dt;
+        return false;
     }
 }
 
@@ -41,8 +53,15 @@ class EventStream{
             return false;
         }
         @e = m_Events[consumed];
-        consumed++;
         return true;
+    }
+
+    void Consume(){
+        consumed++;
+    }
+
+    int EventCount(){
+        return m_Events.length() - consumed;
     }
 
     private uint consumed = 0;

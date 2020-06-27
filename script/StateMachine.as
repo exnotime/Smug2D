@@ -27,12 +27,14 @@ class StateMachine {
         if(Events.GetNextEvent(event)){
             if(event.eventType == MOVEMENT){
                 MovementEvent@ me = cast<MovementEvent>(event);
-                me.Perform();
+                if(me.Perform(deltaTime)){
+                    Events.Consume();
+                }
             }
         }
 
         Actor@ actor = TeamActors[CurrentTeam][CurrentActorIndex];
-        actor.Update(Events); 
+        actor.Update(Events);
         //handle turns
         if(actor.m_ActionPoints == 0){
             CurrentActorIndex++;

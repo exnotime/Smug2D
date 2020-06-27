@@ -75,13 +75,14 @@ namespace Components {
 		return instance.time;
 	}
 
-	void PlayAnimation(AnimationComponent* ac, int animationIndex, bool looping) {
+	void PlayAnimation(AnimationComponent* ac, int animationIndex, bool looping, bool backwards) {
 		if (animationIndex == -1) {
 			return;
 		}
 		SpriteAnimation::SpriteAnimationInstance& instance = SpriteAnimation::GetInstance(ac->instance);
 		instance.paused = false;
 		instance.looping = looping;
+		instance.backwards = backwards;
 		instance.time = 0.0f;
 		instance.animationIndex = animationIndex;
 	}
@@ -133,7 +134,7 @@ namespace Components {
 		engine->RegisterGlobalFunction("AnimationComponent@ GetAnimationComponent(EntityHandle e)", asFUNCTION(GetAnimationComponent), asCALL_CDECL);
 
 		engine->RegisterGlobalFunction("float GetAnimationTime(const AnimationComponent@ ac)", asFUNCTION(GetAnimationTime), asCALL_CDECL);
-		engine->RegisterGlobalFunction("void PlayAnimation(AnimationComponent@ ac, int animationIndex, bool looping = false)", asFUNCTION(PlayAnimation), asCALL_CDECL);
+		engine->RegisterGlobalFunction("void PlayAnimation(AnimationComponent@ ac, int animationIndex, bool looping = false, bool backwards = false)", asFUNCTION(PlayAnimation), asCALL_CDECL);
 		engine->RegisterGlobalFunction("void PauseAnimation(AnimationComponent@ ac)", asFUNCTION(PauseAnimation), asCALL_CDECL);
 	}
 }

@@ -219,8 +219,12 @@ namespace SpriteAnimation {
 				SpriteComponent* sc = (SpriteComponent*)cm.GetComponent(e, ComponentType::SPRITE);
 
 				SpriteAnimationInstance& instance = m_AnimationInstances[ac->instance];
-				instance.time += dt;
-				SampleAnimation(instance.time, instance);
+				if (!instance.paused) {
+					instance.time += dt;
+				}
+					
+
+				SampleAnimation(instance);
 				//update sprite component based on animation component
 				//TODO: handle multiple nodes, for now only take the sprite from the first node
 				const SpriteAnimationResource& resource = m_Animations[instance.handle];
@@ -241,15 +245,23 @@ namespace SpriteAnimation {
 		return m_AnimationInstances[handle];
 	}
 
-	void SampleAnimation(float time, SpriteAnimationInstance& instance) {
+	void SampleAnimation(SpriteAnimationInstance& instance) {
 		auto& animation = m_Animations.find(instance.handle);
 		if (animation != m_Animations.end()) {
 			const Animation& anim = animation->second.animations[instance.animationIndex];
-			instance.time = fmodf(time, anim.duration);
+			if (instance.looping) {
+				instance.time = fmodf(instance.time, anim.duration);
+			} else {
+				instance.time = std::min(instance.time, anim.duration);
+			}
+			float sampleTime = instance.time;
+			if (instance.backwards) {
+				sampleTime = anim.duration - instance.time;
+			}
 			for (uint32_t nodeIndex = 0; nodeIndex < instance.nodes.size(); ++nodeIndex) {
 				auto& keys =  animation->second.nodeKeys[nodeIndex];
 				for (int32_t keyIndex = 0; keyIndex < anim.keys.size(); ++keyIndex) {
-					if (keys[anim.keys[keyIndex]].time > instance.time) {
+					if (keys[anim.keys[keyIndex]].time > sampleTime || keyIndex == (anim.keys.size() - 1)) {
 						//lerp between next and last key based on blendmode
 						auto& node = instance.nodes[nodeIndex];
 						int32_t lastKeyIndex = std::max(0, keyIndex - 1);

@@ -76,6 +76,7 @@ namespace SpriteAnimation {
 		std::vector<Node> nodes;
 		bool looping = true; //Should be part of the animation file weather or not the animation supports looping
 		bool paused = false;
+		bool backwards = false;
 	};
 
 	
@@ -83,7 +84,7 @@ namespace SpriteAnimation {
 	SpriteAnimationResource* GetAnimation(AnimationHandle handle);
 	uint32_t InstansiateAnimation(AnimationHandle handle, uint32_t index = 0);
 	void Update(float dt);
-	void SampleAnimation(float time, SpriteAnimationInstance& instance);
+	void SampleAnimation(SpriteAnimationInstance& instance);
 	SpriteAnimationInstance& GetInstance(uint32_t handle);
 	//temp
 	void RenderAnimatedSprite(sf::RenderWindow* window, SpriteAnimationInstance& instance);

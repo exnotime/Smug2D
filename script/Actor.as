@@ -41,47 +41,57 @@ class PlayerActor : Actor{
 
     void Update(EventStream@ es){
         
-        if(IsKeyPushed(Key::Left)){
+        //dont push more events while we are still waiting for an event to finsish
+        if(es.EventCount() > 0){
+            return;
+        }
+
+        if(IsKeyDown(Key::Left)){
             MovementEvent me;
             me.from = m_GridPosition;
             me.to = Vec2(m_GridPosition.x - 1, m_GridPosition.y);
             @me.actor = @this;
+            me.time = 0.5f; //Todo: Get from animation
             es.PushNewEvent(me);
             m_ActionPoints--;
             SpriteComponent@ sc = GetSpriteComponent(m_Entity);
             sc.flipX = true;
             AnimationComponent@ ac = GetAnimationComponent(m_Entity);
-            PlayAnimation(ac, walkingRightAnimation);
-        } else if(IsKeyPushed(Key::Right)){
+            PlayAnimation(ac, walkingRightAnimation, false, alternate);
+        } else if(IsKeyDown(Key::Right)){
             MovementEvent me;
             me.from = m_GridPosition;
             me.to = Vec2(m_GridPosition.x + 1, m_GridPosition.y);
+            me.time = 0.5f;
             @me.actor = @this;
             es.PushNewEvent(me);
             m_ActionPoints--;
             SpriteComponent@ sc = GetSpriteComponent(m_Entity);
             sc.flipX = false;
             AnimationComponent@ ac = GetAnimationComponent(m_Entity);
-            PlayAnimation(ac, walkingRightAnimation);
-        } else if(IsKeyPushed(Key::Up)){
+            PlayAnimation(ac, walkingRightAnimation, false, alternate);
+        } else if(IsKeyDown(Key::Up)){
             MovementEvent me;
             me.from = m_GridPosition;
             me.to = Vec2(m_GridPosition.x, m_GridPosition.y - 1);
+            me.time = 0.5f;
             @me.actor = @this;
             es.PushNewEvent(me);
             m_ActionPoints--;
             AnimationComponent@ ac = GetAnimationComponent(m_Entity);
-            PlayAnimation(ac, walkingUpAnimation);
-        } else if(IsKeyPushed(Key::Down)){
+            PlayAnimation(ac, walkingUpAnimation, false, alternate);
+        } else if(IsKeyDown(Key::Down)){
             MovementEvent me;
             me.from = m_GridPosition;
             me.to = Vec2(m_GridPosition.x, m_GridPosition.y + 1);
+            me.time = 0.5f;
             @me.actor = @this;
             es.PushNewEvent(me);
             m_ActionPoints--;
             AnimationComponent@ ac = GetAnimationComponent(m_Entity);
-            PlayAnimation(ac, walkingDownAnimation);
+            PlayAnimation(ac, walkingDownAnimation, false, alternate);
         }
+        alternate = !alternate;
     }
 
     void SetGridPos(uint x, uint y){
@@ -112,5 +122,5 @@ class PlayerActor : Actor{
     private int walkingRightAnimation;
     private int walkingDownAnimation;
     private int walkingUpAnimation;
-
+    private bool alternate = false;
 }

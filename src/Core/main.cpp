@@ -211,6 +211,7 @@ int main(int argc, char** argv) {
 			ImGui::SFML::ProcessEvent(event);
 			if (event.type == sf::Event::EventType::Closed) {
 				window.close();
+				break;
 			}
 			if_input::RegisterInputEvent(event);
 			Console::RegisterKeyEvent(event);
@@ -275,7 +276,10 @@ int main(int argc, char** argv) {
 		debugger.Update();
 		if_input::Update(&window);
 		window.display();
-		
 	}
+
+	debugger.End();
+	m_asEngine->ShutDownAndRelease();
+
 	return 0;
 }

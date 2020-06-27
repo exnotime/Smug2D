@@ -24,10 +24,10 @@ public:
 		
 	}
 	~Socket(){
-		closesocket(m_ListenSocket);
 	}
 
 	void close() {
+		closesocket(m_ListenSocket);
 		::shutdown(m_Connection, SD_SEND);
 		closesocket(m_Connection);
 	}
@@ -231,6 +231,8 @@ public:
 	}
 
 	void End() {
+		m_ExitServerThread = true;
+		m_Socket.close();
 		m_ServerThread.join();
 		m_Socket.close();
 	}
@@ -463,11 +465,10 @@ public:
 private:
 
 	void ServerThread() {
-		bool exit = false;
 		m_Socket.listen(9202, "127.0.0.1");
 
 		char buffer[4096];
-		while (!exit) {
+		while (!m_ExitServerThread) {
 			int dataSize = m_Socket.recieve(buffer, sizeof(buffer));
 			if (dataSize > 0) {
 				buffer[dataSize] = '\0';
@@ -477,9 +478,10 @@ private:
 				m_QueueLock.unlock();
 			}
 		}
+		int i = 0;
 	}
 
-
+	bool m_ExitServerThread = false;
 	std::thread m_ServerThread;
 	Socket m_Socket;
 	std::mutex m_QueueLock;
